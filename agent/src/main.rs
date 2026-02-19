@@ -143,9 +143,12 @@ struct ChatResponseMessage {
     content: Option<String>,
     #[serde(default)]
     tool_calls: Option<Vec<ToolCallMessage>>,
-    /// Reasoning/thinking content (OpenAI: reasoning_content, Kimi: reasoning_content)
+    /// Reasoning/thinking content (OpenAI/Kimi: reasoning_content)
     #[serde(default)]
     reasoning_content: Option<String>,
+    /// Reasoning/thinking content (Gemini via OpenRouter: reasoning)
+    #[serde(default)]
+    reasoning: Option<String>,
 }
 
 // ─── LLM API client ─────────────────────────────────────────────────────────
@@ -748,7 +751,9 @@ async fn main() {
         };
 
         // Process response
-        let reasoning_content = response_msg.reasoning_content.clone();
+        // Merge reasoning fields: OpenAI/Kimi use "reasoning_content", Gemini uses "reasoning"
+        let reasoning_content = response_msg.reasoning_content.clone()
+            .or_else(|| response_msg.reasoning.clone());
         if let Some(tool_calls) = response_msg.tool_calls {
             if tool_calls.is_empty() {
                 // No tool calls in response, treat as content-only
@@ -1191,6 +1196,34 @@ mod tests {
     }
 
     // ─── save_eval_log test ──────────────────────────────────────────────────
+
+    // ─── response reasoning field tests ──────────────────────────────────────
+
+    #[test]
+    fn test_response_reasoning_content_field() {
+        // OpenAI / Kimi style: "reasoning_content"
+        let json = r#"{"role":"assistant","content":"hello","reasoning_content":"thinking..."}"#;
+        let msg: ChatResponseMessage = serde_json::from_str(json).unwrap();
+        assert_eq!(msg.reasoning_content.as_deref(), Some("thinking..."));
+        assert!(msg.reasoning.is_none());
+    }
+
+    #[test]
+    fn test_response_reasoning_field_gemini() {
+        // Gemini via OpenRouter style: "reasoning"
+        let json = r#"{"role":"assistant","content":"hello","reasoning":"gemini thinking..."}"#;
+        let msg: ChatResponseMessage = serde_json::from_str(json).unwrap();
+        assert!(msg.reasoning_content.is_none());
+        assert_eq!(msg.reasoning.as_deref(), Some("gemini thinking..."));
+    }
+
+    #[test]
+    fn test_response_no_reasoning_fields() {
+        let json = r#"{"role":"assistant","content":"hello"}"#;
+        let msg: ChatResponseMessage = serde_json::from_str(json).unwrap();
+        assert!(msg.reasoning_content.is_none());
+        assert!(msg.reasoning.is_none());
+    }
 
     // ─── thinking mode tests ─────────────────────────────────────────────────
 

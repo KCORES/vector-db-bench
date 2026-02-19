@@ -1,0 +1,8 @@
+Profiling Report #003
+Date: 2026-02-19 19:24:14 UTC
+
+Top Functions:
+   89.63%  _ZN18vector_db_skeleton2db19search_chunk_avx51217h7280fad2542ec7b0E.llvm.13292866736812070801
+    1.57%  serde_json::de::Deserializer<R>::parse_decimal
+    1.15%  <serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize
+    1.01%  <&mut serde_json::de::Deserializer<R> as serde_core::de::Deserializer>::deserialize_f32

@@ -1,5 +1,15 @@
 [
   {
+    "model_name": "google/gemini-3-pro-preview",
+    "entry_dir": "gemini-3-pro-preview-turn-3",
+    "qps": 1970.5047452456813,
+    "recall": 0.9534399999999714,
+    "recall_passed": true,
+    "tool_calls_used": 50,
+    "result_source": "best_benchmark",
+    "timestamp": "2026-02-19T20:00:15.467679+00:00"
+  },
+  {
     "model_name": "qwen3.5-plus",
     "entry_dir": "qwen3.5-plus-turn-12",
     "qps": 1405.2997680039518,
@@ -7,7 +17,7 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.232404+00:00"
+    "timestamp": "2026-02-19T20:00:15.486105+00:00"
   },
   {
     "model_name": "google/gemini-3.1-pro-preview",
@@ -17,7 +27,17 @@
     "recall_passed": true,
     "tool_calls_used": 46,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.214633+00:00"
+    "timestamp": "2026-02-19T20:00:15.469282+00:00"
+  },
+  {
+    "model_name": "google/gemini-3-pro-preview",
+    "entry_dir": "gemini-3-pro-preview-turn-1",
+    "qps": 427.0316967317366,
+    "recall": 0.9970999999999997,
+    "recall_passed": true,
+    "tool_calls_used": 37,
+    "result_source": "best_benchmark",
+    "timestamp": "2026-02-19T20:00:15.464612+00:00"
   },
   {
     "model_name": "kimi-k2.5",
@@ -27,7 +47,7 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.225213+00:00"
+    "timestamp": "2026-02-19T20:00:15.479304+00:00"
   },
   {
     "model_name": "google/gemini-3.1-pro-preview",
@@ -37,7 +57,7 @@
     "recall_passed": true,
     "tool_calls_used": 31,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.215798+00:00"
+    "timestamp": "2026-02-19T20:00:15.470335+00:00"
   },
   {
     "model_name": "google/gemini-3.1-pro-preview",
@@ -47,7 +67,17 @@
     "recall_passed": true,
     "tool_calls_used": 46,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.217670+00:00"
+    "timestamp": "2026-02-19T20:00:15.472064+00:00"
+  },
+  {
+    "model_name": "google/gemini-3-pro-preview",
+    "entry_dir": "gemini-3-pro-preview-turn-2",
+    "qps": 61.37769090740581,
+    "recall": 0.999,
+    "recall_passed": true,
+    "tool_calls_used": 20,
+    "result_source": "best_benchmark",
+    "timestamp": "2026-02-19T20:00:15.465425+00:00"
   },
   {
     "model_name": "kimi-k2.5",
@@ -57,7 +87,7 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.226970+00:00"
+    "timestamp": "2026-02-19T20:00:15.480950+00:00"
   },
   {
     "model_name": "glm-5",
@@ -67,7 +97,7 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.222717+00:00"
+    "timestamp": "2026-02-19T20:00:15.476865+00:00"
   },
   {
     "model_name": "glm-5",
@@ -77,7 +107,7 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.221074+00:00"
+    "timestamp": "2026-02-19T20:00:15.475314+00:00"
   },
   {
     "model_name": "qwen3.5-plus",
@@ -87,7 +117,7 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "best_benchmark",
-    "timestamp": "2026-02-19T18:54:19.230440+00:00"
+    "timestamp": "2026-02-19T20:00:15.484214+00:00"
   },
   {
     "model_name": "qwen3.5-plus",
@@ -97,7 +127,7 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "benchmark_files_scan",
-    "timestamp": "2026-02-19T18:54:19.228472+00:00"
+    "timestamp": "2026-02-19T20:00:15.482319+00:00"
   },
   {
     "model_name": "kimi-k2.5",
@@ -107,7 +137,7 @@
     "recall_passed": true,
     "tool_calls_used": 0,
     "result_source": "benchmark_files_scan",
-    "timestamp": "2026-02-19T18:54:19.223031+00:00"
+    "timestamp": "2026-02-19T20:00:15.477142+00:00"
   },
   {
     "model_name": "glm-5",
@@ -117,6 +147,6 @@
     "recall_passed": true,
     "tool_calls_used": 50,
     "result_source": "benchmark_files_scan",
-    "timestamp": "2026-02-19T18:54:19.219360+00:00"
+    "timestamp": "2026-02-19T20:00:15.473652+00:00"
   }
 ]

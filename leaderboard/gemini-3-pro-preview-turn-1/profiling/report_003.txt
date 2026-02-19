@@ -1,0 +1,8 @@
+Profiling Report #003
+Date: 2026-02-19 19:26:56 UTC
+
+Top Functions:
+   86.22%  _ZN18vector_db_skeleton8distance18l2_distance_avx51217h5c66836754947281E.llvm.12560295666135957457
+    4.90%  vector_db_skeleton::db::VectorDB::search
+    1.54%  serde_json::de::Deserializer<R>::parse_decimal
+    1.20%  <serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize

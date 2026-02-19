@@ -1,0 +1,6 @@
+Profiling Report #001
+Date: 2026-02-19 19:14:51 UTC
+
+Top Functions:
+   92.39%  core::ops::function::impls::<impl core::ops::function::FnMut<A> for &F>::call_mut
+    3.61%  alloc::collections::binary_heap::BinaryHeap<T,A>::pop

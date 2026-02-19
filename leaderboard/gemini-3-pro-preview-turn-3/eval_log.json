@@ -1,0 +1,1164 @@
+{
+  "best_benchmark": {
+    "avg_latency_ms": 1.949510270299995,
+    "comparison": {
+      "previous_qps": 1506.4060792234504,
+      "previous_recall": 0.9544999999999964,
+      "qps_change_pct": 30.81,
+      "recall_change_pct": -0.11
+    },
+    "concurrency": 4,
+    "duration_secs": 5.074841877,
+    "p50_latency_ms": 2.0676415,
+    "p95_latency_ms": 3.030515149999998,
+    "p99_latency_ms": 3.531725150000001,
+    "qps": 1970.5047452456813,
+    "recall": 0.9534399999999714,
+    "recall_passed": true,
+    "recall_threshold": 0.95,
+    "total_queries": 10000
+  },
+  "call_log": [
+    {
+      "duration_ms": 0,
+      "index": 1,
+      "input": {
+        "params": {
+          "path": "src/db.rs"
+        },
+        "tool": "read_file"
+      },
+      "output": {
+        "content": "use crate::api::*;\n\npub struct VectorDB {\n    // 模型自行定义内部数据结构\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        todo!(\"模型实现\")\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        todo!(\"模型实现\")\n    }\n\n    pub fn bulk_insert(&self, vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        todo!(\"模型实现\")\n    }\n\n    pub fn search(&self, vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        todo!(\"模型实现\")\n    }\n}\n",
+        "type": "ReadFile"
+      },
+      "timestamp": "2026-02-19T19:08:18.677047280Z",
+      "tool": "read_file"
+    },
+    {
+      "duration_ms": 0,
+      "index": 2,
+      "input": {
+        "params": {
+          "path": "src/distance.rs"
+        },
+        "tool": "read_file"
+      },
+      "output": {
+        "content": "pub fn l2_distance(a: &[f32], b: &[f32]) -> f64 {\n    todo!(\"模型实现\")\n}\n",
+        "type": "ReadFile"
+      },
+      "timestamp": "2026-02-19T19:08:18.677298799Z",
+      "tool": "read_file"
+    },
+    {
+      "duration_ms": 0,
+      "index": 3,
+      "input": {
+        "params": {
+          "path": "src/api.rs"
+        },
+        "tool": "read_file"
+      },
+      "output": {
+        "content": "use serde::{Deserialize, Serialize};\n\n#[derive(Deserialize)]\npub struct InsertRequest {\n    pub id: u64,\n    pub vector: Vec<f32>,\n}\n\n#[derive(Serialize)]\npub struct InsertResponse {\n    pub status: String,\n}\n\n#[derive(Deserialize)]\npub struct BulkInsertRequest {\n    pub vectors: Vec<InsertRequest>,\n}\n\n#[derive(Serialize)]\npub struct BulkInsertResponse {\n    pub status: String,\n    pub inserted: usize,\n}\n\n#[derive(Deserialize)]\npub struct SearchRequest {\n    pub vector: Vec<f32>,\n    pub top_k: u32,\n}\n\n#[derive(Serialize)]\npub struct SearchResult {\n    pub id: u64,\n    pub distance: f64,\n}\n\n#[derive(Serialize)]\npub struct SearchResponse {\n    pub results: Vec<SearchResult>,\n}\n",
+        "type": "ReadFile"
+      },
+      "timestamp": "2026-02-19T19:08:18.677595525Z",
+      "tool": "read_file"
+    },
+    {
+      "duration_ms": 0,
+      "index": 4,
+      "input": {
+        "params": {
+          "path": "Cargo.toml"
+        },
+        "tool": "read_file"
+      },
+      "output": {
+        "content": "[package]\nname = \"vector-db-skeleton\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\naxum = \"0.7\"\ntokio = { version = \"1\", features = [\"full\"] }\nserde = { version = \"1\", features = [\"derive\"] }\nserde_json = \"1\"\n\n[profile.release]\nlto = true\ncodegen-units = 1\ndebug = true\n",
+        "type": "ReadFile"
+      },
+      "timestamp": "2026-02-19T19:08:18.677854667Z",
+      "tool": "read_file"
+    },
+    {
+      "duration_ms": 0,
+      "index": 5,
+      "input": {
+        "params": {
+          "content": "[package]\nname = \"vector-db-skeleton\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\naxum = \"0.7\"\ntokio = { version = \"1\", features = [\"full\"] }\nserde = { version = \"1\", features = [\"derive\"] }\nserde_json = \"1\"\nrayon = \"1.10\"\nparking_lot = \"0.12\"\nndarray = \"0.15\"\n\n[profile.release]\nlto = true\ncodegen-units = 1\ndebug = true\n",
+          "path": "Cargo.toml"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 329,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:08:38.317164910Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 0,
+      "index": 6,
+      "input": {
+        "params": {
+          "content": "pub fn l2_distance(a: &[f32], b: &[f32]) -> f64 {\n    a.iter()\n     .zip(b.iter())\n     .map(|(x, y)| {\n         let diff = x - y;\n         (diff * diff) as f64\n     })\n     .sum()\n}\n",
+          "path": "src/distance.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 183,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:08:59.605191362Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 0,
+      "index": 7,
+      "input": {
+        "params": {
+          "content": "use crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::RwLock;\nuse crate::distance::l2_distance;\n\npub struct VectorDB {\n    ids: RwLock<Vec<u64>>,\n    vectors: RwLock<Vec<f32>>, // Flattened vectors\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            ids: RwLock::new(Vec::new()),\n            vectors: RwLock::new(Vec::new()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 {\n            return; // Ignore invalid length for now or handle appropriately\n        }\n        let mut ids = self.ids.write();\n        let mut vectors = self.vectors.write();\n        ids.push(id);\n        vectors.extend(vector);\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut ids = self.ids.write();\n        let mut vectors = self.vectors.write();\n        \n        ids.reserve(count);\n        vectors.reserve(count * 128);\n\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                ids.push(id);\n                vectors.extend(vec);\n            }\n        }\n        count\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        let ids = self.ids.read();\n        let vectors = self.vectors.read();\n        \n        if ids.is_empty() {\n            return Vec::new();\n        }\n\n        // Parallel brute force search\n        let mut results: Vec<(u64, f64)> = ids.par_iter()\n            .enumerate()\n            .map(|(i, &id)| {\n                let vec_slice = &vectors[i * 128..(i + 1) * 128];\n                let dist = l2_distance(query_vector, vec_slice);\n                (id, dist)\n            })\n            .collect();\n\n        // Sort by distance\n        // For top_k, we can use a partial sort or select_nth_unstable if k is small relative to N\n        // But simple sort is reliable for correctness first.\n        results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));\n        \n        results.into_iter()\n            .take(top_k as usize)\n            .map(|(id, dist)| SearchResult { id, distance: dist })\n            .collect()\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 2199,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:09:26.559591972Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 34836,
+      "index": 8,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:10:22.649600777Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 53762,
+      "index": 9,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test PASSED: recall 0.9990 >= threshold 0.9500",
+        "passed": true,
+        "recall": 0.999,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:11:33.352176725Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 116155,
+      "index": 10,
+      "input": {
+        "params": {
+          "concurrency": 4,
+          "max_queries": 1000,
+          "warmup": null
+        },
+        "tool": "run_benchmark"
+      },
+      "output": {
+        "avg_latency_ms": 253.19489862300017,
+        "concurrency": 4,
+        "duration_secs": 63.402158689,
+        "p50_latency_ms": 249.7292695,
+        "p95_latency_ms": 312.75320935,
+        "p99_latency_ms": 350.79248422,
+        "qps": 15.772333634651082,
+        "recall": 0.9993999999999998,
+        "recall_passed": true,
+        "recall_threshold": 0.95,
+        "total_queries": 1000,
+        "type": "RunBenchmark"
+      },
+      "timestamp": "2026-02-19T19:13:34.762443900Z",
+      "tool": "run_benchmark"
+    },
+    {
+      "duration_ms": 0,
+      "index": 11,
+      "input": {
+        "params": {
+          "content": "#[cfg(any(target_arch = \"x86\", target_arch = \"x86_64\"))]\nuse std::arch::x86_64::*;\n\npub fn l2_distance(a: &[f32], b: &[f32]) -> f64 {\n    #[cfg(any(target_arch = \"x86\", target_arch = \"x86_64\"))]\n    {\n        if is_x86_feature_detected!(\"avx512f\") {\n            return unsafe { l2_distance_avx512(a, b) };\n        } else if is_x86_feature_detected!(\"avx2\") {\n            return unsafe { l2_distance_avx2(a, b) };\n        }\n    }\n    \n    l2_distance_scalar(a, b)\n}\n\n#[target_feature(enable = \"avx512f\")]\nunsafe fn l2_distance_avx512(a: &[f32], b: &[f32]) -> f64 {\n    let mut sum = _mm512_setzero_ps();\n    let n = a.len();\n    let mut i = 0;\n\n    // Process 16 floats at a time\n    while i + 16 <= n {\n        let va = _mm512_loadu_ps(a.as_ptr().add(i));\n        let vb = _mm512_loadu_ps(b.as_ptr().add(i));\n        let diff = _mm512_sub_ps(va, vb);\n        sum = _mm512_fmadd_ps(diff, diff, sum);\n        i += 16;\n    }\n\n    let mut remaining = 0.0;\n    if i < n {\n         // Create a mask for the remaining elements\n         let mask = (1u16 << (n - i)) - 1;\n         let va = _mm512_maskz_loadu_ps(mask, a.as_ptr().add(i));\n         let vb = _mm512_maskz_loadu_ps(mask, b.as_ptr().add(i));\n         let diff = _mm512_sub_ps(va, vb);\n         // simple sum for tail since it's masked\n         let sq_diff = _mm512_mul_ps(diff, diff);\n         remaining = _mm512_reduce_add_ps(sq_diff);\n    }\n    \n    _mm512_reduce_add_ps(sum) as f64 + remaining as f64\n}\n\n#[target_feature(enable = \"avx2\")]\nunsafe fn l2_distance_avx2(a: &[f32], b: &[f32]) -> f64 {\n    let mut sum = _mm256_setzero_ps();\n    let n = a.len();\n    let mut i = 0;\n\n    while i + 8 <= n {\n        let va = _mm256_loadu_ps(a.as_ptr().add(i));\n        let vb = _mm256_loadu_ps(b.as_ptr().add(i));\n        let diff = _mm256_sub_ps(va, vb);\n        sum = _mm256_fmadd_ps(diff, diff, sum);\n        i += 8;\n    }\n\n    let mut total = 0.0;\n    // reduce AVX register\n    let mut out = [0.0; 8];\n    _mm256_storeu_ps(out.as_mut_ptr(), sum);\n    total += out.iter().sum::<f32>();\n\n    // finish tail\n    while i < n {\n        let diff = a[i] - b[i];\n        total += diff * diff;\n        i += 1;\n    }\n\n    total as f64\n}\n\nfn l2_distance_scalar(a: &[f32], b: &[f32]) -> f64 {\n    a.iter()\n     .zip(b.iter())\n     .map(|(x, y)| {\n         let diff = x - y;\n         (diff * diff) as f64\n     })\n     .sum()\n}\n",
+          "path": "src/distance.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 2367,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:13:52.016438931Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 19164,
+      "index": 12,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:14:30.097749019Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 49456,
+      "index": 13,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test PASSED: recall 0.9990 >= threshold 0.9500",
+        "passed": true,
+        "recall": 0.999,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:15:23.614839437Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 87645,
+      "index": 14,
+      "input": {
+        "params": {
+          "concurrency": 4,
+          "max_queries": 1000,
+          "warmup": null
+        },
+        "tool": "run_benchmark"
+      },
+      "output": {
+        "avg_latency_ms": 147.8705076189998,
+        "comparison": {
+          "previous_qps": 15.772333634651082,
+          "previous_recall": 0.9993999999999998,
+          "qps_change_pct": 71.14,
+          "recall_change_pct": 0.0
+        },
+        "concurrency": 4,
+        "duration_secs": 37.047226854,
+        "p50_latency_ms": 143.9674475,
+        "p95_latency_ms": 203.12099625,
+        "p99_latency_ms": 242.42565391,
+        "qps": 26.992573666604404,
+        "recall": 0.9993999999999998,
+        "recall_passed": true,
+        "recall_threshold": 0.95,
+        "total_queries": 1000,
+        "type": "RunBenchmark"
+      },
+      "timestamp": "2026-02-19T19:16:55.601435705Z",
+      "tool": "run_benchmark"
+    },
+    {
+      "duration_ms": 111128,
+      "index": 15,
+      "input": {
+        "params": {
+          "duration": 10
+        },
+        "tool": "run_profiling"
+      },
+      "output": {
+        "flamegraph_svg_path": "profiling/flamegraph_001.svg",
+        "top_functions": [
+          {
+            "function": "_ZN18vector_db_skeleton8distance18l2_distance_avx51217h3af89656d6c7a416E.llvm.1339849301239475860",
+            "percentage": 46.54
+          },
+          {
+            "function": "core::slice::sort::stable::quicksort::quicksort",
+            "percentage": 33.54
+          },
+          {
+            "function": "0x0000000000198c89",
+            "percentage": 4.91
+          },
+          {
+            "function": "core::slice::sort::stable::drift::sort",
+            "percentage": 3.55
+          },
+          {
+            "function": "rayon::iter::plumbing::Folder::consume_iter",
+            "percentage": 1.8
+          },
+          {
+            "function": "core::slice::sort::shared::smallsort::sort8_stable",
+            "percentage": 1.77
+          }
+        ],
+        "total_samples": 9211,
+        "type": "RunProfiling"
+      },
+      "timestamp": "2026-02-19T19:19:24.302852167Z",
+      "tool": "run_profiling"
+    },
+    {
+      "duration_ms": 0,
+      "index": 16,
+      "input": {
+        "params": {
+          "content": "use crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::RwLock;\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\n\npub struct VectorDB {\n    ids: RwLock<Vec<u64>>,\n    vectors: RwLock<Vec<f32>>, // Flattened vectors\n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        // Max-heap based on distance (keep smallest distances)\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            ids: RwLock::new(Vec::new()),\n            vectors: RwLock::new(Vec::new()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 {\n            return; \n        }\n        let mut ids = self.ids.write();\n        let mut vectors = self.vectors.write();\n        ids.push(id);\n        vectors.extend(vector);\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut ids = self.ids.write();\n        let mut vectors = self.vectors.write();\n        \n        ids.reserve(count);\n        vectors.reserve(count * 128);\n\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                ids.push(id);\n                vectors.extend(vec);\n            }\n        }\n        count\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        let ids = self.ids.read();\n        let vectors = self.vectors.read();\n        \n        if ids.is_empty() {\n            return Vec::new();\n        }\n\n        let k = top_k as usize;\n\n        // Parallel fold-reduce approach\n        // Each thread maintains a BinaryHeap of size K (containing the *worst* of the top-k)\n        // We use a MaxHeap, so the top is the largest distance.\n        // When heap size > k, we pop the max (worst) one.\n        \n        let top_k_heap = ids.par_iter()\n            .enumerate()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, (i, &id)| {\n                    let vec_slice = &vectors[i * 128..(i + 1) * 128];\n                    let dist = l2_distance(query_vector, vec_slice);\n\n                    if heap.len() < k {\n                        heap.push(HeapItem { distance: OrderedFloat(dist), id });\n                    } else if let Some(max_item) = heap.peek() {\n                        if dist < max_item.distance.0 {\n                            heap.pop();\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id });\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                || BinaryHeap::with_capacity(k),\n                |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                            if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                }\n            );\n\n        // Extract sorted results\n        let mut results: Vec<SearchResult> = top_k_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect();\n            \n        results\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 4151,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:19:52.568851612Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 18775,
+      "index": 17,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:20:27.499039878Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 43743,
+      "index": 18,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test PASSED: recall 0.9980 >= threshold 0.9500",
+        "passed": true,
+        "recall": 0.998,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:21:15.336440050Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 63132,
+      "index": 19,
+      "input": {
+        "params": {
+          "concurrency": 4,
+          "max_queries": 1000,
+          "warmup": null
+        },
+        "tool": "run_benchmark"
+      },
+      "output": {
+        "avg_latency_ms": 77.42971272500004,
+        "comparison": {
+          "previous_qps": 26.992573666604404,
+          "previous_recall": 0.9993999999999998,
+          "qps_change_pct": 90.93,
+          "recall_change_pct": -0.06
+        },
+        "concurrency": 4,
+        "duration_secs": 19.403721881,
+        "p50_latency_ms": 89.60258300000001,
+        "p95_latency_ms": 116.20819045,
+        "p99_latency_ms": 142.23667218999998,
+        "qps": 51.53650449809805,
+        "recall": 0.9987999999999996,
+        "recall_passed": true,
+        "recall_threshold": 0.95,
+        "total_queries": 1000,
+        "type": "RunBenchmark"
+      },
+      "timestamp": "2026-02-19T19:22:22.824752391Z",
+      "tool": "run_benchmark"
+    },
+    {
+      "duration_ms": 70242,
+      "index": 20,
+      "input": {
+        "params": {
+          "duration": 10
+        },
+        "tool": "run_profiling"
+      },
+      "output": {
+        "flamegraph_svg_path": "profiling/flamegraph_002.svg",
+        "top_functions": [
+          {
+            "function": "_ZN18vector_db_skeleton8distance18l2_distance_avx51217h3af89656d6c7a416E.llvm.7068654612174006679",
+            "percentage": 82.15
+          },
+          {
+            "function": "core::ops::function::impls::<impl core::ops::function::FnMut<A> for &F>::call_mut",
+            "percentage": 6.62
+          },
+          {
+            "function": "<rayon::iter::fold::FoldFolder<C,ID,F> as rayon::iter::plumbing::Folder<T>>::consume_iter",
+            "percentage": 2.07
+          },
+          {
+            "function": "vector_db_skeleton::distance::l2_distance",
+            "percentage": 1.22
+          },
+          {
+            "function": "<serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize",
+            "percentage": 1.1
+          },
+          {
+            "function": "serde_json::de::Deserializer<R>::parse_decimal",
+            "percentage": 1.08
+          }
+        ],
+        "total_samples": 9423,
+        "type": "RunProfiling"
+      },
+      "timestamp": "2026-02-19T19:23:37.755654029Z",
+      "tool": "run_profiling"
+    },
+    {
+      "duration_ms": 0,
+      "index": 21,
+      "input": {
+        "params": {
+          "content": "use crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\n\nconst NUM_CLUSTERS: usize = 1600; // sqrt(1M) approx\n// Need enough probes to hit 95% recall.\n// 32/1600 = 2%. With random centroids, might need more.\n// Let's create a dynamic config or reasonable default.\nconst N_PROBE: usize = 64; \n\npub struct VectorDB {\n    // Staging area for data before indexing\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    \n    // The Index\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    centroids: Vec<Vec<f32>>, // [NUM_CLUSTERS][128]\n    // Inverted lists: cluster_id -> (ids, vectors_flat)\n    // Flattened vectors for cache locality during scan\n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, // stored flattened: v0_0, v0_1... v1_0...\n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        // This function upgrades the lock and builds the index\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        // Since we are moving data to index, we consume it.\n        // Wait, if we clear data, subsequent inserts are fine.\n        // But we need to handle \"data already in index\" vs \"new data\".\n        // Simplest: take all data out of `data`, build index.\n        // If query comes, check new data in `data` (which is empty) + index.\n        \n        if data_lock.is_empty() {\n            return;\n        }\n        \n        // Upgrade to write lock\n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        \n        let total_vecs = data_lock.len();\n        // println!(\"Building index for {} vectors...\", total_vecs);\n\n        // 1. Train Centroids (use subset if large)\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        let sample_size = std::cmp::min(total_vecs, 50_000);\n        let mut sample_indices: Vec<usize> = (0..total_vecs).collect();\n        sample_indices.shuffle(&mut rng);\n        \n        // Initialize centroids with random points\n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|i| data_lock[sample_indices[i % total_vecs]].1.clone())\n            .collect();\n\n        // K-Means iterations (e.g. 5)\n        for _iter in 0..5 {\n            // Assign sample points to nearest centroid and accumulate sum\n            // This is slow if done strictly.\n            // Let's do a simplified one-shot or just stick to random if we are lazy?\n            // K-Means significantly improves quantization quality.\n            // We can paralellize the assignment step.\n            \n            // Just use the initial random centroids for now to test pipeline?\n            // \"Random projection\" is robust enough for high recall if N_PROBE is high enough.\n            // Let's skipping full K-Means loop for first iteration to see speed.\n            // Actually, static random centroids from data distribution is a decent baseline.\n            // Let's refine centroids *once*?\n            // Let's do one pass of refinement on the sample.\n            \n            let mut new_centroids = vec![vec![0.0f32; 128]; num_clusters];\n            let mut counts = vec![0u32; num_clusters];\n            \n            // Assign sample subset\n            let samples: Vec<&Vec<f32>> = sample_indices.iter().take(sample_size).map(|&i| &data_lock[i].1).collect();\n            \n            // Parallelize assignment\n             let assignments: Vec<(usize, usize)> = samples.par_iter().enumerate().map(|(idx, vec)| {\n                let mut best_dist = f64::MAX;\n                let mut best_c = 0;\n                for (c_idx, c_vec) in centroids.iter().enumerate() {\n                    let d = l2_distance(vec, c_vec);\n                    if d < best_dist {\n                        best_dist = d;\n                        best_c = c_idx;\n                    }\n                }\n                (idx, best_c)\n             }).collect();\n             \n             for (s_idx, c_idx) in assignments {\n                 let s_vec = samples[s_idx];\n                 for k in 0..128 {\n                     new_centroids[c_idx][k] += s_vec[k];\n                 }\n                 counts[c_idx] += 1;\n             }\n             \n             for c in 0..num_clusters {\n                 if counts[c] > 0 {\n                     let inv = 1.0 / counts[c] as f32;\n                     for k in 0..128 {\n                         centroids[c][k] = new_centroids[c][k] * inv;\n                     }\n                 }\n             }\n        }\n        \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        // 2. Assign all data to centroids\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            // Scan all centroids\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        // 3. Populate lists\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        // Clear staged data\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        // Heuristic: if we have a lot of data in staging, maybe build index?\n        // Check without lock first\n        let data_len = self.data.read().len();\n        if data_len > 10_000 {\n           self.train_and_build();\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read(); // Read lock for fallback search\n\n        if !index.built {\n            // Brute force on staging\n            if staging.is_empty() {\n                return Vec::new();\n            }\n             let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| {\n                    (*id, l2_distance(query_vector, vec))\n                })\n                .collect();\n            // Partial sort top_k\n            if top_k as usize >= results.len() {\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            } else {\n                 results.select_nth_unstable_by(top_k as usize, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n                 results.truncate(top_k as usize);\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            }\n            return results.into_iter().map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n        // IVF Search\n        \n        // 1. Find nearest centroids (coarse search)\n        // This is small (1600 centroids), single thread is fine or rayon?\n        // 1600 * 128 distance calcs is fast.\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        // sort ascending\n        // We need top N_PROBE\n        if N_PROBE < centroid_dists.len() {\n             centroid_dists.select_nth_unstable_by(N_PROBE, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n             centroid_dists.truncate(N_PROBE);\n        }\n        \n        // 2. Search in candidate lists\n        let k = top_k as usize;\n        \n        // We can collect all candidate vectors and do a bulk search, \n        // or search list by list and merge heaps.\n        \n        let candidates: Vec<&InvertedList> = centroid_dists.iter()\n            .map(|(idx, _)| &index.lists[*idx])\n            .collect();\n            \n        // Use a thread-local heap approach via Rayon `fold` + `reduce` over the lists?\n        // Or flattener?\n        // N_PROBE lists. Some might be empty.\n        \n        let top_k_heap = candidates.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap, list| {\n                    let n = list.ids.len();\n                    for i in 0..n {\n                        let vec_slice = &list.vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                         if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: list.ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: list.ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n            \n         // Also check staging area! (newly inserted vectors)\n         // Usually small, but required for consistency\n         let final_heap = staging.iter().fold(top_k_heap, |mut heap, (id, vec)| {\n              let dist = l2_distance(query_vector, vec);\n               if heap.len() < k {\n                    heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                } else if let Some(max_item) = heap.peek() {\n                    if dist < max_item.distance.0 {\n                        heap.pop();\n                        heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    }\n                }\n                heap\n         });\n\n        let mut results: Vec<SearchResult> = final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect();\n            \n        results\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 12373,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:24:35.985489184Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 13278,
+      "index": 22,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build failed: cargo build --release failed (exit code 101):\n   Compiling vector-db-skeleton v0.1.0 (/data/repo/kcores.com/repo/vector-db-bench/leaderboard/gemini-3-pro-preview-turn-3)\nerror[E0433]: failed to resolve: use of unresolved module or unlinked crate `rand`\n --> src/db.rs:8:5\n  |\n8 | use rand::seq::SliceRandom;\n  |     ^^^^ use of unresolved module or unlinked crate `rand`\n  |\n  = help: if you wanted to use a crate named `rand`, use `cargo add rand` to add it to your `Cargo.toml`\n\nerror[E0432]: unresolved import `rand`\n --> src/db.rs:9:5\n  |\n9 | use rand::thread_rng;\n  |     ^^^^ use of unresolved module or unlinked crate `rand`\n  |\n  = help: if you wanted to use a crate named `rand`, use `cargo add rand` to add it to your `Cargo.toml`\n\nwarning: unused imports: `AtomicBool` and `Ordering as AtomicOrdering`\n --> src/db.rs:7:25\n  |\n7 | use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};\n  |                         ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  |\n  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default\n\nerror[E0599]: no method named `shuffle` found for struct `Vec<usize>` in the current scope\n   --> src/db.rs:129:24\n    |\n129 |         sample_indices.shuffle(&mut rng);\n    |                        ^^^^^^^ method not found in `Vec<usize>`\n\nwarning: variable does not need to be mutable\n   --> src/db.rs:335:13\n    |\n335 |         let mut results: Vec<SearchResult> = final_heap.into_sorted_vec().into_iter()\n    |             ----^^^^^^^\n    |             |\n    |             help: remove this `mut`\n    |\n    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default\n\nSome errors have detailed explanations: E0432, E0433, E0599.\nFor more information about an error, try `rustc --explain E0432`.\nwarning: `vector-db-skeleton` (bin \"vector-db-skeleton\") generated 2 warnings\nerror: could not compile `vector-db-skeleton` (bin \"vector-db-skeleton\") due to 3 previous errors; 2 warnings emitted\n",
+        "success": false,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:25:04.351708991Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 0,
+      "index": 23,
+      "input": {
+        "params": {
+          "content": "[package]\nname = \"vector-db-skeleton\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\naxum = \"0.7\"\ntokio = { version = \"1\", features = [\"full\"] }\nserde = { version = \"1\", features = [\"derive\"] }\nserde_json = \"1\"\nrayon = \"1.10\"\nparking_lot = \"0.12\"\nrand = \"0.8\"\n\n[profile.release]\nlto = true\ncodegen-units = 1\ndebug = true\n",
+          "path": "Cargo.toml"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 325,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:25:15.504997551Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 0,
+      "index": 24,
+      "input": {
+        "params": {
+          "content": "use crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\n\nconst NUM_CLUSTERS: usize = 1600; // sqrt(1M) approx\nconst N_PROBE: usize = 64; \n\npub struct VectorDB {\n    // Staging area for data before indexing\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    \n    // The Index\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    centroids: Vec<Vec<f32>>, // [NUM_CLUSTERS][128]\n    // Inverted lists: cluster_id -> (ids, vectors_flat)\n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, // stored flattened\n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        // Max-heap: largest distance at top\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        if data_lock.is_empty() {\n            return;\n        }\n        \n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        let total_vecs = data_lock.len();\n\n        // 1. Train Centroids\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        let sample_size = std::cmp::min(total_vecs, 50_000);\n        let mut sample_indices: Vec<usize> = (0..total_vecs).collect();\n        sample_indices.shuffle(&mut rng);\n        \n        // Initialize centroids with random points\n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|i| data_lock[sample_indices[i % sample_indices.len()]].1.clone())\n            .collect();\n\n        // One-pass K-Means refinement\n        let mut new_centroids = vec![vec![0.0f32; 128]; num_clusters];\n        // Need thread-safe accumulation. Parallelize?\n        // For simplicity, let's just use the random centroids. \n        // With high N_PROBE, random selection is often surprisingly good enough for 95% recall.\n        // But let's do one assignment pass to verify.\n        \n        // Actually, let's skip complex KMeans training to avoid complexity bugs and just use random-from-data.\n        // It saves time. If recall fails, we can add KMeans back.\n        \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        // 2. Assign all data to centroids\n        // Pre-calculate assignments in parallel\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        // 3. Populate lists serial (fast enough) or partitioned\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        // Trigger build if needed\n        {\n            let data = self.data.read();\n            if data.len() > 10_000 {\n                // Drop read lock before potential write\n                drop(data); \n                self.train_and_build();\n            }\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read();\n\n        // If index not built yet, brute force scanning\n        if !index.built {\n            if staging.is_empty() {\n                return Vec::new();\n            }\n            let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| {\n                    (*id, l2_distance(query_vector, vec))\n                })\n                .collect();\n            \n            // Simple sort\n            results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            return results.into_iter().take(top_k as usize).map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n        // IVF Search\n        // 1. Find nearest centroids (N_PROBE)\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        centroid_dists.sort_unstable_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n        let probes = std::cmp::min(N_PROBE, centroid_dists.len());\n        \n        // 2. Search in candidate lists\n        let k = top_k as usize;\n        \n        // Gather candidate lists references\n        let candidates: Vec<&InvertedList> = centroid_dists.iter().take(probes)\n            .map(|(idx, _)| &index.lists[*idx])\n            .collect();\n\n        let top_k_heap = candidates.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, list| {\n                    let n = list.ids.len();\n                    // Process vectors in chunks for better SIMD/Prefetch?\n                    // Rayon fold iterates lists. Inside a list, we go sequential.\n                    // This is good for cache locality if lists are contiguous.\n                    for i in 0..n {\n                        let vec_slice = &list.vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                        // Maintain top-k heap\n                        if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: list.ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: list.ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n            \n         // Also check staging area\n         let mut final_heap = staging.iter().fold(top_k_heap, |mut heap, (id, vec)| {\n              let dist = l2_distance(query_vector, vec);\n               if heap.len() < k {\n                    heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                } else if let Some(max_item) = heap.peek() {\n                    if dist < max_item.distance.0 {\n                        heap.pop();\n                        heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    }\n                }\n                heap\n         });\n\n        let mut results: Vec<SearchResult> = final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect();\n        \n        // Sort ascending (closest first)\n        // BinaryHeap into_sorted_vec returns ascending order because of the Ord impl?\n        // Wait, standard BinaryHeap is max-heap. `into_sorted_vec()` pops elements.\n        // It pops max first, so vector will be Max...Min (Descending).\n        // Since we want Ascending (closest first), i.e., Min...Max.\n        // The results from `into_sorted_vec` will be Descending Distance (Worst to Best).\n        // So we need to reverse it. Or just sort it explicitly.\n        // Actually, HeapItem comparison is `distance.cmp`. Max heap means largest distance on top.\n        // `into_sorted_vec` returns smallest to largest! (Rust docs: \"in ascending order\")\n        // Wait, `into_sorted_vec` says \"returns the elements in ascending order\". \n        // If it's a MaxHeap, popping yields Max. Reversing that yields Ascending.\n        // \"This is the same as repeatedly popping elements and pushing them to a vector, then reversing the vector.\"\n        // So `into_sorted_vec` gives [Min, ..., Max]. \n        // MaxHeap top is Max. Pop -> Max. \n        // If I pop all: [Max, 2ndMax, ..., Min].\n        // \"ascending order\" means it sorts by Ord.\n        // Let's trust `into_sorted_vec` sorts by Ord. \n        // My Ord is `distance`. So it returns `d=0.1, d=0.2 ...`? \n        // Yes, that's what we want.\n        \n        results\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 10611,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:27:05.274953467Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 26354,
+      "index": 25,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:27:46.189923984Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 49935,
+      "index": 26,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test PASSED: recall 0.9900 >= threshold 0.9500",
+        "passed": true,
+        "recall": 0.99,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:28:46.463179495Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 49859,
+      "index": 27,
+      "input": {
+        "params": {
+          "concurrency": 4,
+          "max_queries": 1000,
+          "warmup": null
+        },
+        "tool": "run_benchmark"
+      },
+      "output": {
+        "avg_latency_ms": 4.798224786999994,
+        "comparison": {
+          "previous_qps": 51.53650449809805,
+          "previous_recall": 0.9987999999999996,
+          "qps_change_pct": 1485.4,
+          "recall_change_pct": -1.49
+        },
+        "concurrency": 4,
+        "duration_secs": 1.223900635,
+        "p50_latency_ms": 5.294453,
+        "p95_latency_ms": 7.29759605,
+        "p99_latency_ms": 9.226655819999998,
+        "qps": 817.0597934202397,
+        "recall": 0.9838999999999984,
+        "recall_passed": true,
+        "recall_threshold": 0.95,
+        "total_queries": 1000,
+        "type": "RunBenchmark"
+      },
+      "timestamp": "2026-02-19T19:29:41.232256700Z",
+      "tool": "run_benchmark"
+    },
+    {
+      "duration_ms": 70960,
+      "index": 28,
+      "input": {
+        "params": {
+          "duration": 10
+        },
+        "tool": "run_profiling"
+      },
+      "output": {
+        "flamegraph_svg_path": "profiling/flamegraph_003.svg",
+        "top_functions": [
+          {
+            "function": "_ZN18vector_db_skeleton8distance18l2_distance_avx51217ha130e1e13c503a4bE.llvm.1827075800123932864",
+            "percentage": 65.02
+          },
+          {
+            "function": "rayon::iter::plumbing::bridge_producer_consumer::helper",
+            "percentage": 8.41
+          },
+          {
+            "function": "vector_db_skeleton::distance::l2_distance",
+            "percentage": 5.01
+          },
+          {
+            "function": "serde_json::de::Deserializer<R>::parse_decimal",
+            "percentage": 3.53
+          },
+          {
+            "function": "<serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize",
+            "percentage": 2.7
+          },
+          {
+            "function": "<&mut serde_json::de::Deserializer<R> as serde_core::de::Deserializer>::deserialize_f32",
+            "percentage": 2.09
+          },
+          {
+            "function": "serde_json::de::Deserializer<R>::parse_integer",
+            "percentage": 1.94
+          },
+          {
+            "function": "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed",
+            "percentage": 1.59
+          },
+          {
+            "function": "core::ops::function::impls::<impl core::ops::function::FnMut<A> for &F>::call_mut",
+            "percentage": 1.01
+          }
+        ],
+        "total_samples": 9130,
+        "type": "RunProfiling"
+      },
+      "timestamp": "2026-02-19T19:30:56.803955814Z",
+      "tool": "run_profiling"
+    },
+    {
+      "duration_ms": 0,
+      "index": 29,
+      "input": {
+        "params": {
+          "content": "use crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\n\nconst NUM_CLUSTERS: usize = 2048; // Increased sqrt(1M) approx for finer granularity\nconst N_PROBE: usize = 48; // Decrease probe count to boost speed, while fine granularity keeps recall?\n\npub struct VectorDB {\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    // [NUM_CLUSTERS][128], aligned? \n    // Storing as flat vector might help cache prefetching if we access them sequentially?\n    // But we random access them.\n    centroids: Vec<Vec<f32>>, \n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, // flattened\n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        if data_lock.is_empty() {\n            return;\n        }\n        \n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        let total_vecs = data_lock.len();\n\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        \n        // Random centroids init\n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|_| {\n                let idx = rng.gen_range(0..total_vecs);\n                data_lock[idx].1.clone()\n            })\n            .collect();\n            \n        // No K-Means refinement for speed. Rely on N_PROBE.\n        \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        // Parallel assignment\n        // Chunk the data to reduce overhead of thread spawning if too small\n        // But rayon handles work stealing fine.\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            // Unroll loop manually or rely on compiler?\n            // This inner loop is small (2048 iters).\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        // Trigger check\n        if self.data.read().len() > 10_000 {\n             self.train_and_build();\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read();\n\n        if !index.built {\n            if staging.is_empty() { return Vec::new(); }\n            let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| (*id, l2_distance(query_vector, vec)))\n                .collect();\n            results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            return results.into_iter().take(top_k as usize).map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n        // 1. Find nearest centroids\n        // Compute distances to all centroids\n        // Flattened centroids might be faster?\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        // We only need top N_PROBE\n        centroid_dists.select_nth_unstable_by(N_PROBE, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n        let probes = std::cmp::min(N_PROBE, centroid_dists.len());\n\n        let candidates_indices: Vec<usize> = centroid_dists.iter().take(probes).map(|(i, _)| *i).collect();\n\n        let k = top_k as usize;\n        \n        // Use Rayon for parallel search of the lists\n        // We create a thread-local max-heap\n        \n        let top_k_heap = candidates_indices.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, idx| {\n                    let list = &index.lists[idx];\n                    let vectors = &list.vectors;\n                    let ids = &list.ids;\n                    let n = ids.len();\n                    \n                    // We iterate sequentially over chunks in list\n                    // vectors is flattened.\n                    for i in 0..n {\n                        let vec_slice = &vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                        if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n\n        // Merge with staging results\n        // Staging is usually empty or small after bulk load\n        let mut final_heap = top_k_heap;\n        if !staging.is_empty() {\n             for (id, vec) in staging.iter() {\n                  let dist = l2_distance(query_vector, vec);\n                   if final_heap.len() < k {\n                        final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    } else if let Some(max_item) = final_heap.peek() {\n                        if dist < max_item.distance.0 {\n                            final_heap.pop();\n                            final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                        }\n                    }\n             }\n        }\n\n        // Output sorted\n        final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect()\n    }\n}\n\nuse rand::Rng; // Add Rng trait usage\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 8649,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:31:57.634801119Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 21478,
+      "index": 30,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:32:34.849885944Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 51977,
+      "index": 31,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test PASSED: recall 0.9630 >= threshold 0.9500",
+        "passed": true,
+        "recall": 0.9630000000000004,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:33:31.045152636Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 51475,
+      "index": 32,
+      "input": {
+        "params": {
+          "concurrency": 4,
+          "max_queries": 1000,
+          "warmup": null
+        },
+        "tool": "run_benchmark"
+      },
+      "output": {
+        "avg_latency_ms": 2.4350989940000005,
+        "comparison": {
+          "previous_qps": 817.0597934202397,
+          "previous_recall": 0.9838999999999984,
+          "qps_change_pct": 94.26,
+          "recall_change_pct": -1.89
+        },
+        "concurrency": 4,
+        "duration_secs": 0.630024941,
+        "p50_latency_ms": 2.4834715000000003,
+        "p95_latency_ms": 3.90409,
+        "p99_latency_ms": 4.637111920000001,
+        "qps": 1587.2387502830622,
+        "recall": 0.9652999999999962,
+        "recall_passed": true,
+        "recall_threshold": 0.95,
+        "total_queries": 1000,
+        "type": "RunBenchmark"
+      },
+      "timestamp": "2026-02-19T19:34:27.612528427Z",
+      "tool": "run_benchmark"
+    },
+    {
+      "duration_ms": 59704,
+      "index": 33,
+      "input": {
+        "params": {
+          "duration": 10
+        },
+        "tool": "run_profiling"
+      },
+      "output": {
+        "flamegraph_svg_path": "profiling/flamegraph_004.svg",
+        "top_functions": [
+          {
+            "function": "_ZN18vector_db_skeleton8distance18l2_distance_avx51217ha130e1e13c503a4bE.llvm.3718668639527750602",
+            "percentage": 69.63
+          },
+          {
+            "function": "rayon::iter::plumbing::bridge_producer_consumer::helper",
+            "percentage": 7.55
+          },
+          {
+            "function": "vector_db_skeleton::distance::l2_distance",
+            "percentage": 5.38
+          },
+          {
+            "function": "serde_json::de::Deserializer<R>::parse_decimal",
+            "percentage": 2.95
+          },
+          {
+            "function": "<serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize",
+            "percentage": 2.15
+          },
+          {
+            "function": "serde_json::de::Deserializer<R>::parse_integer",
+            "percentage": 1.6
+          },
+          {
+            "function": "<&mut serde_json::de::Deserializer<R> as serde_core::de::Deserializer>::deserialize_f32",
+            "percentage": 1.51
+          },
+          {
+            "function": "<serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed",
+            "percentage": 1.18
+          }
+        ],
+        "total_samples": 9195,
+        "type": "RunProfiling"
+      },
+      "timestamp": "2026-02-19T19:35:31.979663784Z",
+      "tool": "run_profiling"
+    },
+    {
+      "duration_ms": 0,
+      "index": 34,
+      "input": {
+        "params": {
+          "content": "use crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\nuse rand::Rng;\n\nconst NUM_CLUSTERS: usize = 3000; // Even finer?\nconst N_PROBE: usize = 32; // Reduce probe to gain speed if recall holds\n\npub struct VectorDB {\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    centroids: Vec<Vec<f32>>, \n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, \n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        if data_lock.is_empty() {\n            return;\n        }\n        \n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        let total_vecs = data_lock.len();\n\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        \n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|_| {\n                let idx = rng.gen_range(0..total_vecs);\n                data_lock[idx].1.clone()\n            })\n            .collect();\n            \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        // Use Rayon chunking for assignment\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            // Pre-calculate pointer to avoid bounds checks in loop?\n            // Actually compiler handles this well.\n            // Loop unrolling? 256 size is better for L1 cache?\n            // With 3000 clusters, scanning centroids takes 3000 * 128 FLOPS.\n            // 3000 is still small.\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        let mut data_len = 0;\n        {\n             let data = self.data.read();\n             data_len = data.len();\n        }\n        if data_len > 10_000 {\n            self.train_and_build();\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read();\n\n        if !index.built {\n            if staging.is_empty() { return Vec::new(); }\n            let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| (*id, l2_distance(query_vector, vec)))\n                .collect();\n            results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            return results.into_iter().take(top_k as usize).map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n        // 1. Find nearest probe centroids\n        // Optimization: calculate distances in parallel or vectorized if possible. \n        // 3000 centroids is small enough for one thread.\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        // select top N_PROBE\n        let probes = std::cmp::min(N_PROBE, centroid_dists.len());\n        centroid_dists.select_nth_unstable_by(probes, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n        \n        let candidates_indices: Vec<usize> = centroid_dists.iter().take(probes).map(|(i, _)| *i).collect();\n\n        let k = top_k as usize;\n        \n        // 2. Scan inverted lists in parallel\n        // We use `fold` to create local heaps, then reduce.\n        let top_k_heap = candidates_indices.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, idx| {\n                    let list = &index.lists[idx];\n                    let vectors = &list.vectors;\n                    let ids = &list.ids;\n                    let n = ids.len();\n                    \n                    // Unrolled or block processing?\n                    // Rely on auto-vectorization in l2_distance.\n                    for i in 0..n {\n                        let vec_slice = &vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                        if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n\n        // Merge Staging\n        let mut final_heap = top_k_heap;\n        if !staging.is_empty() {\n             for (id, vec) in staging.iter() {\n                  let dist = l2_distance(query_vector, vec);\n                   if final_heap.len() < k {\n                        final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    } else if let Some(max_item) = final_heap.peek() {\n                        if dist < max_item.distance.0 {\n                            final_heap.pop();\n                            final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                        }\n                    }\n             }\n        }\n\n        final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect()\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 8407,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:35:55.407181413Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 20380,
+      "index": 35,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:36:31.633854894Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 57464,
+      "index": 36,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test FAILED: recall 0.9360 < threshold 0.9500",
+        "passed": false,
+        "recall": 0.936,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:37:33.977695332Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 0,
+      "index": 37,
+      "input": {
+        "params": {
+          "content": "// Adjusting parameters to regain recall\n// Increase probes slightly.\nconst NUM_CLUSTERS: usize = 3000;\nconst N_PROBE: usize = 42; \n\nuse crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\nuse rand::Rng;\n\npub struct VectorDB {\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    centroids: Vec<Vec<f32>>, \n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, \n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        if data_lock.is_empty() {\n            return;\n        }\n        \n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        let total_vecs = data_lock.len();\n\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        \n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|_| {\n                let idx = rng.gen_range(0..total_vecs);\n                data_lock[idx].1.clone()\n            })\n            .collect();\n            \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        let mut data_len = 0;\n        {\n             let data = self.data.read();\n             data_len = data.len();\n        }\n        if data_len > 10_000 {\n            self.train_and_build();\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read();\n\n        if !index.built {\n            if staging.is_empty() { return Vec::new(); }\n            let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| (*id, l2_distance(query_vector, vec)))\n                .collect();\n             // Partial sort optimization for brute force cases\n            if top_k as usize >= results.len() {\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            } else {\n                 results.select_nth_unstable_by(top_k as usize, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n                 results.truncate(top_k as usize);\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            }\n            return results.into_iter().map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        let probes = std::cmp::min(N_PROBE, centroid_dists.len());\n        centroid_dists.select_nth_unstable_by(probes, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n        \n        let candidates_indices: Vec<usize> = centroid_dists.iter().take(probes).map(|(i, _)| *i).collect();\n\n        let k = top_k as usize;\n        \n        let top_k_heap = candidates_indices.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, idx| {\n                    let list = &index.lists[idx];\n                    let vectors = &list.vectors;\n                    let ids = &list.ids;\n                    let n = ids.len();\n                    \n                    for i in 0..n {\n                        let vec_slice = &vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                        if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n\n        let mut final_heap = top_k_heap;\n        if !staging.is_empty() {\n             for (id, vec) in staging.iter() {\n                  let dist = l2_distance(query_vector, vec);\n                   if final_heap.len() < k {\n                        final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    } else if let Some(max_item) = final_heap.peek() {\n                        if dist < max_item.distance.0 {\n                            final_heap.pop();\n                            final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                        }\n                    }\n             }\n        }\n\n        final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect()\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 8003,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:37:56.467849676Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 20810,
+      "index": 38,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:38:32.762197927Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 56799,
+      "index": 39,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test FAILED: recall 0.9420 < threshold 0.9500",
+        "passed": false,
+        "recall": 0.9419999999999998,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:39:38.940805172Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 0,
+      "index": 40,
+      "input": {
+        "params": {
+          "content": "// Adjusting parameters to regain recall\n// Increase probes to 48 (revert previous param), keep cluster high\nconst NUM_CLUSTERS: usize = 3000;\nconst N_PROBE: usize = 50; \n\nuse crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\nuse rand::Rng;\n\npub struct VectorDB {\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    centroids: Vec<Vec<f32>>, \n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, \n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        if data_lock.is_empty() {\n            return;\n        }\n        \n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        let total_vecs = data_lock.len();\n\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        \n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|_| {\n                let idx = rng.gen_range(0..total_vecs);\n                data_lock[idx].1.clone()\n            })\n            .collect();\n            \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        let mut data_len = 0;\n        {\n             let data = self.data.read();\n             data_len = data.len();\n        }\n        if data_len > 10_000 {\n            self.train_and_build();\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read();\n\n        if !index.built {\n            if staging.is_empty() { return Vec::new(); }\n            let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| (*id, l2_distance(query_vector, vec)))\n                .collect();\n             \n            if top_k as usize >= results.len() {\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            } else {\n                 results.select_nth_unstable_by(top_k as usize, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n                 results.truncate(top_k as usize);\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            }\n            return results.into_iter().map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        let probes = std::cmp::min(N_PROBE, centroid_dists.len());\n        centroid_dists.select_nth_unstable_by(probes, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n        \n        let candidates_indices: Vec<usize> = centroid_dists.iter().take(probes).map(|(i, _)| *i).collect();\n\n        let k = top_k as usize;\n        \n        // Optimize: flatten the work of \"scanning lists\" into parallel iterator?\n        // Current: map over candidates (e.g. 50 tasks), each doing sequential scan.\n        // It's reasonably balanced if lists are similar size. \n        // 1M vectors, 3000 clusters => 333 vectors per cluster avg. \n        // 333 * 50 = 16k distance calcs. Fast.\n        \n        let top_k_heap = candidates_indices.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, idx| {\n                    let list = &index.lists[idx];\n                    let vectors = &list.vectors;\n                    let ids = &list.ids;\n                    let n = ids.len();\n                    \n                    for i in 0..n {\n                        let vec_slice = &vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                        if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n\n        let mut final_heap = top_k_heap;\n        if !staging.is_empty() {\n             for (id, vec) in staging.iter() {\n                  let dist = l2_distance(query_vector, vec);\n                   if final_heap.len() < k {\n                        final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    } else if let Some(max_item) = final_heap.peek() {\n                        if dist < max_item.distance.0 {\n                            final_heap.pop();\n                            final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                        }\n                    }\n             }\n        }\n\n        final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect()\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 8350,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:40:04.932296459Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 20655,
+      "index": 41,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:40:41.060387430Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 56751,
+      "index": 42,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test PASSED: recall 0.9660 >= threshold 0.9500",
+        "passed": true,
+        "recall": 0.966,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:41:43.224367053Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 57001,
+      "index": 43,
+      "input": {
+        "params": {
+          "concurrency": 4,
+          "max_queries": 1000,
+          "warmup": null
+        },
+        "tool": "run_benchmark"
+      },
+      "output": {
+        "avg_latency_ms": 2.6566195829999986,
+        "comparison": {
+          "previous_qps": 1587.2387502830622,
+          "previous_recall": 0.9652999999999962,
+          "qps_change_pct": -8.83,
+          "recall_change_pct": -1.49
+        },
+        "concurrency": 4,
+        "duration_secs": 0.691058979,
+        "p50_latency_ms": 2.8895929999999996,
+        "p95_latency_ms": 4.1160032499999994,
+        "p99_latency_ms": 5.112521319999999,
+        "qps": 1447.0544922910262,
+        "recall": 0.950899999999996,
+        "recall_passed": true,
+        "recall_threshold": 0.95,
+        "total_queries": 1000,
+        "type": "RunBenchmark"
+      },
+      "timestamp": "2026-02-19T19:42:46.691489773Z",
+      "tool": "run_benchmark"
+    },
+    {
+      "duration_ms": 65218,
+      "index": 44,
+      "input": {
+        "params": {
+          "duration": 10
+        },
+        "tool": "run_profiling"
+      },
+      "output": {
+        "flamegraph_svg_path": "profiling/flamegraph_005.svg",
+        "top_functions": [
+          {
+            "function": "_ZN18vector_db_skeleton8distance18l2_distance_avx51217ha130e1e13c503a4bE.llvm.3152297954599314308",
+            "percentage": 77.39
+          },
+          {
+            "function": "core::ops::function::impls::<impl core::ops::function::FnMut<A> for &F>::call_mut",
+            "percentage": 7.18
+          },
+          {
+            "function": "vector_db_skeleton::distance::l2_distance",
+            "percentage": 4.37
+          },
+          {
+            "function": "serde_json::de::Deserializer<R>::parse_decimal",
+            "percentage": 1.68
+          },
+          {
+            "function": "<&mut serde_json::de::Deserializer<R> as serde_core::de::Deserializer>::deserialize_f32",
+            "percentage": 1.12
+          },
+          {
+            "function": "<serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize",
+            "percentage": 1.06
+          }
+        ],
+        "total_samples": 9280,
+        "type": "RunProfiling"
+      },
+      "timestamp": "2026-02-19T19:44:00.396168464Z",
+      "tool": "run_profiling"
+    },
+    {
+      "duration_ms": 0,
+      "index": 45,
+      "input": {
+        "params": {
+          "content": "// Tuning parameters for the final push\n// We are at 1447 QPS with 95.09% recall (barely passed).\n// We need to either make it faster (less work) or safer (more recall).\n// If we increase NUM_CLUSTERS, lists get smaller, but centroid scan gets slower.\n// 3000 centroids = 3000 * 128 ops.\n// 50 probes = 50 * (1M / 3000) = 50 * 333 = 16650 vectors.\n// Total work per query: 3000 + 16650 = 19650 distance calcs.\n// Previous: 1600 clusters. 64 probes.\n// 1600 + 64 * (1M/1600) = 1600 + 64 * 625 = 1600 + 40000 = 41600.\n// We reduced work by half and got 2x speedup (800 -> 1500).\n// Recall dropped from 98% to 95%.\n// Let's try to increase N_PROBE slightly for safety but optimize distance calc?\n// Distance calc is already AVX-512.\n// Maybe prefetch?\n// \n// Let's try 4096 clusters (power of 2 good for something?)\n// Centroids: 4096. \n// Probes: Need to cover enough ground.\n// 1M / 4096 = 244 per list.\n// If we probe 60 lists => 60 * 244 = 14640 vectors.\n// Total work: 4096 + 14640 = 18736. Slightly less work than 3000/50.\n// Recall might be similar or better due to finer clusters.\n\nconst NUM_CLUSTERS: usize = 4096;\nconst N_PROBE: usize = 64; // Check more lists, but lists are smaller. 64 * 244 = 15616. \n// Total work = 4096 + 15616 = ~20k. Very similar to current.\n// Let's try.\n\nuse crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\nuse rand::Rng;\n\npub struct VectorDB {\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    centroids: Vec<Vec<f32>>, \n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, \n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        if data_lock.is_empty() {\n            return;\n        }\n        \n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        let total_vecs = data_lock.len();\n\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        \n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|_| {\n                let idx = rng.gen_range(0..total_vecs);\n                data_lock[idx].1.clone()\n            })\n            .collect();\n            \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        // 2. Assign all data to centroids\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            // Unroll loop manually or rely on compiler?\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        let mut data_len = 0;\n        {\n             let data = self.data.read();\n             data_len = data.len();\n        }\n        if data_len > 10_000 {\n            self.train_and_build();\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read();\n\n        if !index.built {\n            if staging.is_empty() { return Vec::new(); }\n            let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| (*id, l2_distance(query_vector, vec)))\n                .collect();\n             \n            if top_k as usize >= results.len() {\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            } else {\n                 results.select_nth_unstable_by(top_k as usize, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n                 results.truncate(top_k as usize);\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            }\n            return results.into_iter().map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        let probes = std::cmp::min(N_PROBE, centroid_dists.len());\n        centroid_dists.select_nth_unstable_by(probes, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n        \n        let candidates_indices: Vec<usize> = centroid_dists.iter().take(probes).map(|(i, _)| *i).collect();\n\n        let k = top_k as usize;\n        \n        let top_k_heap = candidates_indices.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, idx| {\n                    let list = &index.lists[idx];\n                    let vectors = &list.vectors;\n                    let ids = &list.ids;\n                    let n = ids.len();\n                    \n                    for i in 0..n {\n                        let vec_slice = &vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                        if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n\n        let mut final_heap = top_k_heap;\n        if !staging.is_empty() {\n             for (id, vec) in staging.iter() {\n                  let dist = l2_distance(query_vector, vec);\n                   if final_heap.len() < k {\n                        final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    } else if let Some(max_item) = final_heap.peek() {\n                        if dist < max_item.distance.0 {\n                            final_heap.pop();\n                            final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                        }\n                    }\n             }\n        }\n\n        final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect()\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 9208,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:44:31.553638207Z",
+      "tool": "write_file"
+    },
+    {
+      "duration_ms": 20364,
+      "index": 46,
+      "input": {
+        "tool": "build_project"
+      },
+      "output": {
+        "message": "Build succeeded.",
+        "success": true,
+        "type": "BuildProject"
+      },
+      "timestamp": "2026-02-19T19:45:10.237919373Z",
+      "tool": "build_project"
+    },
+    {
+      "duration_ms": 62638,
+      "index": 47,
+      "input": {
+        "tool": "run_correctness_test"
+      },
+      "output": {
+        "failed_queries": [],
+        "message": "Correctness test PASSED: recall 0.9650 >= threshold 0.9500",
+        "passed": true,
+        "recall": 0.9650000000000004,
+        "recall_threshold": 0.95,
+        "total_queries": 100,
+        "type": "RunCorrectnessTest"
+      },
+      "timestamp": "2026-02-19T19:46:17.248301189Z",
+      "tool": "run_correctness_test"
+    },
+    {
+      "duration_ms": 63502,
+      "index": 48,
+      "input": {
+        "params": {
+          "concurrency": 4,
+          "max_queries": 1000,
+          "warmup": null
+        },
+        "tool": "run_benchmark"
+      },
+      "output": {
+        "avg_latency_ms": 2.5489582989999997,
+        "comparison": {
+          "previous_qps": 1447.0544922910262,
+          "previous_recall": 0.950899999999996,
+          "qps_change_pct": 4.1,
+          "recall_change_pct": 0.38
+        },
+        "concurrency": 4,
+        "duration_secs": 0.663831628,
+        "p50_latency_ms": 2.694201,
+        "p95_latency_ms": 3.97489265,
+        "p99_latency_ms": 4.4752838299999995,
+        "qps": 1506.4060792234504,
+        "recall": 0.9544999999999964,
+        "recall_passed": true,
+        "recall_threshold": 0.95,
+        "total_queries": 1000,
+        "type": "RunBenchmark"
+      },
+      "timestamp": "2026-02-19T19:47:25.588516168Z",
+      "tool": "run_benchmark"
+    },
+    {
+      "duration_ms": 71191,
+      "index": 49,
+      "input": {
+        "params": {
+          "duration": 10
+        },
+        "tool": "run_profiling"
+      },
+      "output": {
+        "flamegraph_svg_path": "profiling/flamegraph_006.svg",
+        "top_functions": [
+          {
+            "function": "_ZN18vector_db_skeleton8distance18l2_distance_avx51217ha130e1e13c503a4bE.llvm.12433386337940427801",
+            "percentage": 79.03
+          },
+          {
+            "function": "core::ops::function::impls::<impl core::ops::function::FnMut<A> for &F>::call_mut",
+            "percentage": 7.61
+          },
+          {
+            "function": "vector_db_skeleton::distance::l2_distance",
+            "percentage": 4.78
+          },
+          {
+            "function": "serde_json::de::Deserializer<R>::parse_decimal",
+            "percentage": 1.23
+          }
+        ],
+        "total_samples": 9265,
+        "type": "RunProfiling"
+      },
+      "timestamp": "2026-02-19T19:48:44.495215035Z",
+      "tool": "run_profiling"
+    },
+    {
+      "duration_ms": 0,
+      "index": 50,
+      "input": {
+        "params": {
+          "content": "// Tuning parameters for the final push\n// Good progress. QPS ~1500, Recall 95.4%.\n// Profile shows 80% time in AVX-512 distance calculation. This is ideal.\n// The overhead of framework/sorting is minimal.\n// To get higher QPS, we must reduce the number of distance calculations.\n// Current config: Clusters=4096, Probe=64.\n// Vectors per cluster = 244.\n// Scanned vectors = 64 * 244 = 15616.\n// Centroid scan = 4096.\n// Total = 19712 per query.\n// Can we reduce probes?\n// If we reduce probes to 50: 50 * 244 = 12200. Total 16296. (17% less work).\n// Recall 95.4% is close to boundary. \n// Maybe we can improve centroid assignment quality so we need fewer probes?\n// But assignment is random right now.\n// Doing a single K-Means iteration during build might improve cluster quality significantly, allowing fewer probes.\n// \"Train\" is called once. Adding a little cost there is fine if it speeds up search.\n// Let's implement 2 iterations of K-Means.\n\nconst NUM_CLUSTERS: usize = 4096;\nconst N_PROBE: usize = 50; // Try reducing probe count with better centroids\n\nuse crate::api::*;\nuse rayon::prelude::*;\nuse parking_lot::{RwLock, RwLockUpgradableReadGuard};\nuse crate::distance::l2_distance;\nuse std::cmp::Ordering;\nuse std::collections::BinaryHeap;\nuse rand::seq::SliceRandom;\nuse rand::thread_rng;\nuse rand::Rng;\n\npub struct VectorDB {\n    data: RwLock<Vec<(u64, Vec<f32>)>>,\n    index: RwLock<IVFIndex>,\n}\n\n#[derive(Default)]\nstruct IVFIndex {\n    built: bool,\n    centroids: Vec<Vec<f32>>, \n    lists: Vec<InvertedList>,\n}\n\n#[derive(Default)]\nstruct InvertedList {\n    ids: Vec<u64>,\n    vectors: Vec<f32>, \n}\n\n#[derive(PartialEq)]\nstruct OrderedFloat(f64);\n\nimpl Eq for OrderedFloat {}\n\nimpl PartialOrd for OrderedFloat {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        self.0.partial_cmp(&other.0)\n    }\n}\n\nimpl Ord for OrderedFloat {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.partial_cmp(other).unwrap_or(Ordering::Equal)\n    }\n}\n\n#[derive(Eq, PartialEq)]\nstruct HeapItem {\n    distance: OrderedFloat,\n    id: u64,\n}\n\nimpl Ord for HeapItem {\n    fn cmp(&self, other: &Self) -> Ordering {\n        self.distance.cmp(&other.distance)\n    }\n}\n\nimpl PartialOrd for HeapItem {\n    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {\n        Some(self.cmp(other))\n    }\n}\n\nimpl VectorDB {\n    pub fn new() -> Self {\n        VectorDB {\n            data: RwLock::new(Vec::new()),\n            index: RwLock::new(IVFIndex::default()),\n        }\n    }\n\n    pub fn insert(&self, id: u64, vector: Vec<f32>) {\n        if vector.len() != 128 { return; }\n        self.data.write().push((id, vector));\n    }\n\n    pub fn bulk_insert(&self, new_vectors: Vec<(u64, Vec<f32>)>) -> usize {\n        let count = new_vectors.len();\n        let mut data = self.data.write();\n        for (id, vec) in new_vectors {\n            if vec.len() == 128 {\n                data.push((id, vec));\n            }\n        }\n        count\n    }\n\n    fn train_and_build(&self) {\n        let upgradeable_index = self.index.upgradable_read();\n        \n        if upgradeable_index.built {\n            return;\n        }\n\n        let mut data_lock = self.data.write();\n        if data_lock.is_empty() {\n            return;\n        }\n        \n        let mut index_lock = RwLockUpgradableReadGuard::upgrade(upgradeable_index);\n        let total_vecs = data_lock.len();\n\n        let num_clusters = NUM_CLUSTERS;\n        let mut rng = thread_rng();\n        \n        // Initial random centroids from data\n        let mut centroids: Vec<Vec<f32>> = (0..num_clusters)\n            .map(|_| {\n                let idx = rng.gen_range(0..total_vecs);\n                data_lock[idx].1.clone()\n            })\n            .collect();\n\n        // Single Pass K-Means Refinement\n        // We use a subset of data to refine centroids to keep it fast\n        let sample_size = std::cmp::min(total_vecs, 50_000); \n        // Just pick first sample_size for speed, shuffling is expensive and data is likely random enough or order doesn't matter much\n        // Actually, let's step through data to be robust to sorted input\n        let step = total_vecs / sample_size;\n        \n        // Assign samples to nearest centroid and accumulate\n        // Parallel reduce is better here\n        \n        // (Cluster Index, (Count, SumVector))\n        // This is a bit heavy to implement manually with Rayon fold/reduce.\n        // Let's do a simple shared accumulator with atomics? No, floats. \n        // Mutex on each centroid? Too much contention.\n        // Thread-local accumulation then merge.\n        \n        let new_centroids_sum: Vec<Vec<f32>> = (0..num_clusters).map(|_| vec![0.0; 128]).collect();\n        let new_centroids_count: Vec<usize> = vec![0; num_clusters];\n        \n        let (final_sums, final_counts) = (0..sample_size).into_par_iter()\n            .fold(\n                || (vec![vec![0.0; 128]; num_clusters], vec![0usize; num_clusters]),\n                |(mut sums, mut counts), i| {\n                    let real_idx = (i * step) % total_vecs;\n                    let vec = &data_lock[real_idx].1;\n                    \n                    let mut best_dist = f64::MAX;\n                    let mut best_c = 0;\n                    for (c_idx, c_vec) in centroids.iter().enumerate() {\n                        let d = l2_distance(vec, c_vec);\n                        if d < best_dist {\n                            best_dist = d;\n                            best_c = c_idx;\n                        }\n                    }\n                    \n                    // Accumulate\n                    for k in 0..128 {\n                        sums[best_c][k] += vec[k];\n                    }\n                    counts[best_c] += 1;\n                    (sums, counts)\n                }\n            )\n            .reduce(\n                || (vec![vec![0.0; 128]; num_clusters], vec![0usize; num_clusters]),\n                |(mut s1, mut c1), (s2, c2)| {\n                   for i in 0..num_clusters {\n                       c1[i] += c2[i];\n                       for k in 0..128 {\n                           s1[i][k] += s2[i][k];\n                       }\n                   }\n                   (s1, c1)\n                }\n            );\n            \n         // Update centroids\n         for i in 0..num_clusters {\n             if final_counts[i] > 0 {\n                 let inv = 1.0 / final_counts[i] as f32;\n                 for k in 0..128 {\n                     centroids[i][k] = final_sums[i][k] * inv;\n                 }\n             }\n         }\n            \n        index_lock.centroids = centroids;\n        index_lock.lists = (0..num_clusters).map(|_| InvertedList::default()).collect();\n\n        // Assign all data\n        let assignments: Vec<usize> = data_lock.par_iter().map(|(_, vec)| {\n            let mut best_dist = f64::MAX;\n            let mut best_c = 0;\n            for (c_idx, c_vec) in index_lock.centroids.iter().enumerate() {\n                let d = l2_distance(vec, c_vec);\n                if d < best_dist {\n                    best_dist = d;\n                    best_c = c_idx;\n                }\n            }\n            best_c\n        }).collect();\n\n        for (i, cluster_idx) in assignments.into_iter().enumerate() {\n            let (id, vec) = &data_lock[i];\n            index_lock.lists[cluster_idx].ids.push(*id);\n            index_lock.lists[cluster_idx].vectors.extend_from_slice(vec);\n        }\n\n        index_lock.built = true;\n        data_lock.clear();\n    }\n\n    pub fn search(&self, query_vector: &[f32], top_k: u32) -> Vec<SearchResult> {\n        let mut data_len = 0;\n        {\n             let data = self.data.read();\n             data_len = data.len();\n        }\n        if data_len > 10_000 {\n            self.train_and_build();\n        }\n\n        let index = self.index.read();\n        let staging = self.data.read();\n\n        if !index.built {\n            if staging.is_empty() { return Vec::new(); }\n            let mut results: Vec<(u64, f64)> = staging.par_iter()\n                .map(|(id, vec)| (*id, l2_distance(query_vector, vec)))\n                .collect();\n             \n            if top_k as usize >= results.len() {\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            } else {\n                 results.select_nth_unstable_by(top_k as usize, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n                 results.truncate(top_k as usize);\n                 results.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n            }\n            return results.into_iter().map(|(id, d)| SearchResult{id, distance: d}).collect();\n        }\n\n\n        let mut centroid_dists: Vec<(usize, f64)> = index.centroids.iter()\n            .enumerate()\n            .map(|(i, c)| (i, l2_distance(query_vector, c)))\n            .collect();\n        \n        let probes = std::cmp::min(N_PROBE, centroid_dists.len());\n        centroid_dists.select_nth_unstable_by(probes, |a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));\n        \n        let candidates_indices: Vec<usize> = centroid_dists.iter().take(probes).map(|(i, _)| *i).collect();\n\n        let k = top_k as usize;\n        \n        let top_k_heap = candidates_indices.into_par_iter()\n            .fold(\n                || BinaryHeap::with_capacity(k + 1),\n                |mut heap: BinaryHeap<HeapItem>, idx| {\n                    let list = &index.lists[idx];\n                    let vectors = &list.vectors;\n                    let ids = &list.ids;\n                    let n = ids.len();\n                    \n                    for i in 0..n {\n                        let vec_slice = &vectors[i*128..(i+1)*128];\n                        let dist = l2_distance(query_vector, vec_slice);\n                        \n                        if heap.len() < k {\n                            heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                        } else if let Some(max_item) = heap.peek() {\n                            if dist < max_item.distance.0 {\n                                heap.pop();\n                                heap.push(HeapItem { distance: OrderedFloat(dist), id: ids[i] });\n                            }\n                        }\n                    }\n                    heap\n                }\n            )\n            .reduce(\n                 || BinaryHeap::with_capacity(k),\n                 |mut heap1, heap2| {\n                    for item in heap2 {\n                        if heap1.len() < k {\n                            heap1.push(item);\n                        } else if let Some(max_item) = heap1.peek() {\n                             if item.distance < max_item.distance {\n                                heap1.pop();\n                                heap1.push(item);\n                            }\n                        }\n                    }\n                    heap1\n                 }\n            );\n\n        let mut final_heap = top_k_heap;\n        if !staging.is_empty() {\n             for (id, vec) in staging.iter() {\n                  let dist = l2_distance(query_vector, vec);\n                   if final_heap.len() < k {\n                        final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                    } else if let Some(max_item) = final_heap.peek() {\n                        if dist < max_item.distance.0 {\n                            final_heap.pop();\n                            final_heap.push(HeapItem { distance: OrderedFloat(dist), id: *id });\n                        }\n                    }\n             }\n        }\n\n        final_heap.into_sorted_vec().into_iter()\n            .map(|item| SearchResult { id: item.id, distance: item.distance.0 })\n            .collect()\n    }\n}\n",
+          "path": "src/db.rs"
+        },
+        "tool": "write_file"
+      },
+      "output": {
+        "bytes_written": 11781,
+        "status": "ok",
+        "type": "WriteFile"
+      },
+      "timestamp": "2026-02-19T19:49:21.726730153Z",
+      "tool": "write_file"
+    }
+  ],
+  "last_benchmark": {
+    "avg_latency_ms": 1.949510270299995,
+    "comparison": {
+      "previous_qps": 1506.4060792234504,
+      "previous_recall": 0.9544999999999964,
+      "qps_change_pct": 30.81,
+      "recall_change_pct": -0.11
+    },
+    "concurrency": 4,
+    "duration_secs": 5.074841877,
+    "p50_latency_ms": 2.0676415,
+    "p95_latency_ms": 3.030515149999998,
+    "p99_latency_ms": 3.531725150000001,
+    "qps": 1970.5047452456813,
+    "recall": 0.9534399999999714,
+    "recall_passed": true,
+    "recall_threshold": 0.95,
+    "total_queries": 10000
+  },
+  "tool_calls_total": 50,
+  "tool_calls_used": 50
+}

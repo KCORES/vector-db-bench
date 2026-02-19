@@ -1,0 +1,14 @@
+Profiling Report #004
+Date: 2026-02-19 19:32:27 UTC
+
+Top Functions:
+   62.81%  _ZN18vector_db_skeleton8distance18l2_distance_avx51217h5c66836754947281E.llvm.657368715245782766
+    5.77%  serde_json::de::Deserializer<R>::parse_decimal
+    4.18%  <serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize
+    3.99%  vector_db_skeleton::db::VectorDB::search
+    3.40%  <&mut serde_json::de::Deserializer<R> as serde_core::de::Deserializer>::deserialize_f32
+    3.02%  _ZN10serde_json2de21Deserializer$LT$R$GT$13parse_integer17h870aab185767bf8fE.llvm.10488412306028303692
+    2.41%  <serde_json::de::SeqAccess<R> as serde_core::de::SeqAccess>::next_element_seed
+    1.63%  _ZN80_$LT$serde_json..de..SeqAccess$LT$R$GT$$u20$as$u20$serde_core..de..SeqAccess$GT$17next_element_seed16has_next_element17h621e074c8c0cd043E.llvm.10488412306028303692
+    1.37%  vector_db_skeleton::db::VectorDB::bulk_insert
+    1.02%  <serde_core::de::impls::<impl serde_core::de::Deserialize for alloc::vec::Vec<T>>::deserialize::VecVisitor<T> as serde_core::de::Visitor>::visit_seq

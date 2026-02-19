@@ -1,0 +1,10 @@
+Profiling Report #002
+Date: 2026-02-19 19:23:37 UTC
+
+Top Functions:
+   82.15%  _ZN18vector_db_skeleton8distance18l2_distance_avx51217h3af89656d6c7a416E.llvm.7068654612174006679
+    6.62%  core::ops::function::impls::<impl core::ops::function::FnMut<A> for &F>::call_mut
+    2.07%  <rayon::iter::fold::FoldFolder<C,ID,F> as rayon::iter::plumbing::Folder<T>>::consume_iter
+    1.22%  vector_db_skeleton::distance::l2_distance
+    1.10%  <serde_path_to_error::de::TrackedSeed<X> as serde_core::de::DeserializeSeed>::deserialize
+    1.08%  serde_json::de::Deserializer<R>::parse_decimal
