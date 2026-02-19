@@ -11,7 +11,7 @@
   },
   {
     "model_name": "qwen3.5-plus",
-    "entry_dir": "qwen3.5-plus-turn-12",
+    "entry_dir": "qwen3.5-plus-turn-3",
     "qps": 1405.2997680039518,
     "recall": 0.9558399999999688,
     "recall_passed": true,
@@ -111,7 +111,7 @@
   },
   {
     "model_name": "qwen3.5-plus",
-    "entry_dir": "qwen3.5-plus-turn-11",
+    "entry_dir": "qwen3.5-plus-turn-2",
     "qps": 54.079749099712366,
     "recall": 0.9994,
     "recall_passed": true,
@@ -121,7 +121,7 @@
   },
   {
     "model_name": "qwen3.5-plus",
-    "entry_dir": "qwen3.5-plus-turn-10",
+    "entry_dir": "qwen3.5-plus-turn-1",
     "qps": 36.80876794116389,
     "recall": 0.9994,
     "recall_passed": true,
