@@ -17,10 +17,18 @@ import numpy as np
 from PIL import Image
 
 
-def load_and_deduplicate(path: str) -> list[dict]:
-    """Load leaderboard JSON, keep only the highest-QPS entry per model (recall_passed=true)."""
+def load_and_deduplicate(path: str, show_all: bool = False) -> list[dict]:
+    """Load leaderboard JSON.
+
+    If show_all is False (default), keep only the highest-QPS entry per model.
+    If show_all is True, keep every entry with recall_passed=true.
+    """
     with open(path, "r", encoding="utf-8") as f:
         entries = json.load(f)
+
+    if show_all:
+        passed = [e for e in entries if e.get("recall_passed", False)]
+        return sorted(passed, key=lambda x: x["qps"], reverse=True)
 
     best: dict[str, dict] = {}
     for e in entries:
@@ -34,9 +42,12 @@ def load_and_deduplicate(path: str) -> list[dict]:
     return sorted(best.values(), key=lambda x: x["qps"], reverse=True)
 
 
-def render_chart(entries: list[dict], output_path: str, watermark_path: str | None = None):
+def render_chart(entries: list[dict], output_path: str, watermark_path: str | None = None, show_all: bool = False):
     """Render a horizontal bar chart and save to output_path."""
-    names = [e["model_name"] for e in entries]
+    if show_all:
+        names = [f"{e['model_name']}\n({e.get('entry_dir', '')})" for e in entries]
+    else:
+        names = [e["model_name"] for e in entries]
     qps_values = [e["qps"] for e in entries]
     recalls = [e.get("recall", 0) for e in entries]
 
@@ -103,16 +114,23 @@ def main():
 
     parser = argparse.ArgumentParser(description="Render leaderboard bar chart")
     parser.add_argument("--input", default=str(repo_root / "results" / "leaderboard.json"))
-    parser.add_argument("--output", default=str(repo_root / "assets" / "images" / "leaderboard.png"))
+    parser.add_argument("--output", default=None, help="Output image path (default depends on --all flag)")
     parser.add_argument("--watermark", default=str(repo_root / "assets" / "images" / "kcores-llm-arena-logo-black.png"))
+    parser.add_argument("--all", action="store_true", help="Show all entries instead of only the best per model")
     args = parser.parse_args()
 
-    entries = load_and_deduplicate(args.input)
+    if args.output is None:
+        if args.all:
+            args.output = str(repo_root / "assets" / "images" / "leaderboard_all.png")
+        else:
+            args.output = str(repo_root / "assets" / "images" / "leaderboard.png")
+
+    entries = load_and_deduplicate(args.input, show_all=args.all)
     if not entries:
         print("No valid entries found in leaderboard.")
         return
 
-    render_chart(entries, args.output, args.watermark)
+    render_chart(entries, args.output, args.watermark, show_all=args.all)
 
 
 if __name__ == "__main__":

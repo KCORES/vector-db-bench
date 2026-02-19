@@ -12,7 +12,7 @@ use std::time::Instant;
 
 use state::AgentState;
 use logger::AgentLogger;
-use tools::{dispatch_tool_call, get_tool_definitions, ToolCall, ToolResult};
+use tools::{dispatch_tool_call, get_tool_definitions, BenchmarkResult, ToolCall, ToolResult};
 
 /// Vector DB Agent - Tool Call Agent for LLM evaluation
 #[derive(Parser, Debug)]
@@ -39,7 +39,7 @@ struct Args {
     work_dir: String,
 
     /// Enable model thinking/reasoning mode.
-    /// Values: "false" (default), "true"/"openai", "kimi"
+    /// Values: "false" (default), "true"/"openai", "kimi", "gemini"
     #[arg(long, default_value = "false")]
     thinking_mode: String,
 
@@ -76,6 +76,13 @@ struct Args {
     /// Enable debug output (e.g. dump full LLM request body to stderr).
     #[arg(long, default_value_t = false)]
     debug: bool,
+
+    /// Resume from a previously saved session context.
+    /// If a session_context.json exists in work_dir and the session has not
+    /// reached max_tool_calls, the agent will restore messages and state
+    /// from that file and continue where it left off.
+    #[arg(long, default_value_t = false)]
+    resume: bool,
 }
 
 // ─── OpenAI API types ────────────────────────────────────────────────────────
@@ -158,6 +165,12 @@ fn build_thinking_extra(thinking_mode: &str) -> std::collections::HashMap<String
         }
         "kimi" => {
             extra.insert("enable_thinking".to_string(), serde_json::json!(true));
+        }
+        "gemini" => {
+            extra.insert(
+                "reasoning".to_string(),
+                serde_json::json!({"enabled": true}),
+            );
         }
         _ => {} // "false" or anything else — no extra fields
     }
@@ -405,6 +418,75 @@ fn save_eval_log(work_dir: &Path, state: &AgentState) {
     }
 }
 
+// ─── Session context persistence ─────────────────────────────────────────────
+
+const SESSION_CONTEXT_FILE: &str = "session_context.json";
+
+/// Persisted session context for crash recovery / resume.
+#[derive(Debug, Serialize, Deserialize)]
+struct SessionContext {
+    /// Metadata
+    tool_calls_used: u32,
+    tool_calls_total: u32,
+    /// Conversation messages (the full LLM context window)
+    messages: Vec<ChatMessage>,
+    /// Best benchmark seen so far
+    #[serde(default)]
+    last_benchmark: Option<BenchmarkResult>,
+    #[serde(default)]
+    best_benchmark: Option<BenchmarkResult>,
+    /// Per-call log entries (mirrors AgentState.call_log)
+    #[serde(default)]
+    call_log: Vec<state::ToolCallLog>,
+}
+
+/// Save session context to `<work_dir>/session_context.json`.
+fn save_session_context(
+    work_dir: &Path,
+    messages: &[ChatMessage],
+    state: &AgentState,
+) {
+    let ctx = SessionContext {
+        tool_calls_used: state.tool_calls_used,
+        tool_calls_total: state.tool_calls_total,
+        messages: messages.to_vec(),
+        last_benchmark: state.last_benchmark.clone(),
+        best_benchmark: state.best_benchmark.clone(),
+        call_log: state.call_log.clone(),
+    };
+    let path = work_dir.join(SESSION_CONTEXT_FILE);
+    match serde_json::to_string(&ctx) {
+        Ok(json) => {
+            if let Err(e) = std::fs::write(&path, json) {
+                eprintln!("[agent] Failed to save session context: {}", e);
+            }
+        }
+        Err(e) => eprintln!("[agent] Failed to serialize session context: {}", e),
+    }
+}
+
+/// Try to load a previously saved session context.
+/// Returns `None` if the file doesn't exist or can't be parsed.
+fn load_session_context(work_dir: &Path) -> Option<SessionContext> {
+    let path = work_dir.join(SESSION_CONTEXT_FILE);
+    if !path.exists() {
+        return None;
+    }
+    match std::fs::read_to_string(&path) {
+        Ok(data) => match serde_json::from_str::<SessionContext>(&data) {
+            Ok(ctx) => Some(ctx),
+            Err(e) => {
+                eprintln!("[agent] Failed to parse session context: {}", e);
+                None
+            }
+        },
+        Err(e) => {
+            eprintln!("[agent] Failed to read session context: {}", e);
+            None
+        }
+    }
+}
+
 // ─── Main ────────────────────────────────────────────────────────────────────
 
 #[tokio::main]
@@ -544,16 +626,50 @@ async fn main() {
     let client = reqwest::Client::new();
     let tool_defs = get_tool_definitions();
     let mut state = AgentState::new(Some(args.max_tool_calls));
-    let mut messages = vec![
-        build_system_message(&system_prompt),
-        ChatMessage {
-            role: "user".to_string(),
-            content: Some("Begin. Read the project files and start implementing.".to_string()),
-            tool_calls: None,
-            tool_call_id: None,
-            reasoning_content: None,
-        },
-    ];
+
+    // ── Resume from saved session context if requested ──
+    let (mut messages, resumed) = if args.resume {
+        match load_session_context(&work_dir) {
+            Some(ctx) if ctx.tool_calls_used < ctx.tool_calls_total => {
+                eprintln!(
+                    "[agent] Resuming session: {}/{} tool calls used",
+                    ctx.tool_calls_used, ctx.tool_calls_total
+                );
+                state.tool_calls_used = ctx.tool_calls_used;
+                state.tool_calls_total = ctx.tool_calls_total;
+                state.last_benchmark = ctx.last_benchmark;
+                state.best_benchmark = ctx.best_benchmark;
+                state.call_log = ctx.call_log;
+                (ctx.messages, true)
+            }
+            Some(ctx) => {
+                eprintln!(
+                    "[agent] Session context found but already completed ({}/{} tool calls). Starting fresh.",
+                    ctx.tool_calls_used, ctx.tool_calls_total
+                );
+                (vec![], false)
+            }
+            None => {
+                eprintln!("[agent] No session context found. Starting fresh.");
+                (vec![], false)
+            }
+        }
+    } else {
+        (vec![], false)
+    };
+
+    if !resumed {
+        messages = vec![
+            build_system_message(&system_prompt),
+            ChatMessage {
+                role: "user".to_string(),
+                content: Some("Begin. Read the project files and start implementing.".to_string()),
+                tool_calls: None,
+                tool_call_id: None,
+                reasoning_content: None,
+            },
+        ];
+    }
     let mut finished = false;
     let api_interval = std::time::Duration::from_millis(args.api_interval_ms);
     let mut last_llm_call: Option<Instant> = None;
@@ -620,6 +736,7 @@ async fn main() {
             Err(e) => {
                 eprintln!("[agent] LLM API error: {}. Ending session.", e);
                 logger.log_error(&format!("LLM API error: {}", e));
+                save_session_context(&work_dir, &messages, &state);
                 logger.log_session_end(
                     state.tool_calls_used,
                     state.tool_calls_total,
@@ -644,6 +761,7 @@ async fn main() {
                 if let Some(content) = &response_msg.content {
                     eprintln!("[agent] Assistant (no tools): {}", &content[..content.len().min(200)]);
                     messages.push(build_assistant_content_message(content, reasoning_content));
+                    save_session_context(&work_dir, &messages, &state);
                 } else {
                     eprintln!("[agent] Empty response from LLM, ending session.");
                     logger.log_session_end(
@@ -736,6 +854,9 @@ async fn main() {
                 // Append tool result message
                 messages.push(build_tool_result_message(tool_call_id, &result));
 
+                // Persist session context after each tool call for crash recovery
+                save_session_context(&work_dir, &messages, &state);
+
                 // Check if this was a finish call
                 if tool_name == "finish" {
                     eprintln!("[agent] Finish tool called. Ending session.");
@@ -780,6 +901,7 @@ async fn main() {
             logger.log_llm_response(false, 0, Some(&content), reasoning_content.as_deref(), llm_duration_ms);
             eprintln!("[agent] Assistant: {}", &content[..content.len().min(200)]);
             messages.push(build_assistant_content_message(&content, reasoning_content));
+            save_session_context(&work_dir, &messages, &state);
         } else {
             // Unexpected: no tool calls and no content
             logger.log_llm_response(false, 0, None, reasoning_content.as_deref(), llm_duration_ms);
@@ -1097,6 +1219,26 @@ mod tests {
     }
 
     #[test]
+    fn test_thinking_mode_gemini() {
+        let extra = build_thinking_extra("gemini");
+        assert_eq!(extra["reasoning"], serde_json::json!({"enabled": true}));
+    }
+
+    #[test]
+    fn test_thinking_mode_gemini_flattened_in_request() {
+        let req = ChatRequest {
+            model: "test".to_string(),
+            messages: vec![],
+            tools: vec![],
+            tool_choice: "auto".to_string(),
+            extra_body: build_thinking_extra("gemini"),
+        };
+        let json = serde_json::to_value(&req).unwrap();
+        assert_eq!(json["reasoning"]["enabled"], true);
+        assert!(json.get("extra_body").is_none());
+    }
+
+    #[test]
     fn test_thinking_mode_flattened_in_request() {
         let req = ChatRequest {
             model: "test".to_string(),
@@ -1150,6 +1292,56 @@ mod tests {
         assert_eq!(log["call_log"].as_array().unwrap().len(), 1);
 
         // Cleanup
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    // ─── session context tests ───────────────────────────────────────────────
+
+    #[test]
+    fn test_session_context_save_and_load() {
+        let dir = std::env::temp_dir().join(format!("agent_ctx_test_{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let mut state = AgentState::new(Some(50));
+        state.record_call(
+            "read_file".to_string(),
+            serde_json::json!({"path": "test.rs"}),
+            serde_json::json!({"content": "hello"}),
+            10,
+        );
+
+        let messages = vec![
+            build_system_message("system prompt"),
+            ChatMessage {
+                role: "user".to_string(),
+                content: Some("Begin.".to_string()),
+                tool_calls: None,
+                tool_call_id: None,
+                reasoning_content: None,
+            },
+        ];
+
+        save_session_context(&dir, &messages, &state);
+
+        let ctx = load_session_context(&dir).expect("should load session context");
+        assert_eq!(ctx.tool_calls_used, 1);
+        assert_eq!(ctx.tool_calls_total, 50);
+        assert_eq!(ctx.messages.len(), 2);
+        assert_eq!(ctx.messages[0].role, "system");
+        assert_eq!(ctx.messages[1].role, "user");
+        assert_eq!(ctx.call_log.len(), 1);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_session_context_load_nonexistent() {
+        let dir = std::env::temp_dir().join(format!("agent_ctx_none_{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+
+        let ctx = load_session_context(&dir);
+        assert!(ctx.is_none());
+
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

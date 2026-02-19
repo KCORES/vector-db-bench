@@ -65,9 +65,13 @@ vector-db-bench/
 
 ```bash
 MODEL_NAME=gpt-4o \
+CPU_CORES=0-3 \
+THINKING_MODE=openai \
+API_INTERVAL_MS=10000 \
 API_URL=https://api.openai.com/v1 \
 API_KEY=sk-your-api-key \
 MODEL_ID=gpt-4o \
+WORK_DIR=./leaderboard/gpt-4o-turn-1 \
 bash scripts/run_eval.sh
 ```
 
@@ -79,6 +83,9 @@ THINKING_MODE=openai bash scripts/run_eval.sh
 
 # Kimi 系列 — 发送 {"enable_thinking": true}
 THINKING_MODE=kimi bash scripts/run_eval.sh
+
+# Gemini 系列（如 gemini-3.1-pro-preview）— 发送 {"reasoning": {"enabled": true}}
+THINKING_MODE=gemini bash scripts/run_eval.sh
 ```
 
 脚本会依次执行：
@@ -86,9 +93,44 @@ THINKING_MODE=kimi bash scripts/run_eval.sh
 2. 转换 fvecs → JSON 格式（已存在则跳过）
 3. 生成 ground truth（已存在则跳过）
 4. 编译 benchmark client 和 agent 框架
-5. 初始化工作目录（复制骨架代码）
-6. 启动 Agent 运行评测
+5. 初始化工作目录（复制骨架代码，如检测到可恢复的会话则跳过）
+6. 启动 Agent 运行评测（如有可恢复会话则自动 resume）
 7. 收集结果并更新排行榜
+
+### 断点续跑（Session Resume）
+
+Agent 在运行过程中会自动将会话上下文（LLM 对话历史、tool call 计数、benchmark 记录等）持久化到 `session_context.json`。如果评测中途因 API 错误、网络中断或进程崩溃而失败，重新运行同一命令即可自动恢复：
+
+```bash
+# 首次运行（中途失败）
+MODEL_NAME=gemini WORK_DIR=./leaderboard/gemini-turn-1 \
+  API_URL=https://openrouter.ai/api/v1 API_KEY=sk-xxx MODEL_ID=google/gemini-3.1-pro-preview \
+  bash scripts/run_eval.sh
+
+# 直接重新运行同一命令，脚本会自动检测 session_context.json 并恢复
+MODEL_NAME=gemini WORK_DIR=./leaderboard/gemini-turn-1 \
+  API_URL=https://openrouter.ai/api/v1 API_KEY=sk-xxx MODEL_ID=google/gemini-3.1-pro-preview \
+  bash scripts/run_eval.sh
+```
+
+恢复机制：
+- 脚本检测到 `WORK_DIR/session_context.json` 且 tool call 未用尽时，跳过工作目录重建，以 `--resume` 模式启动 Agent
+- Agent 从 `session_context.json` 恢复完整的对话历史和状态，继续与 LLM 交互
+- 如果会话已完成（tool call 已用尽），则正常重新开始
+
+手动使用 `--resume` 参数：
+
+```bash
+./agent/target/release/vector-db-agent \
+  --api-url https://openrouter.ai/api/v1 \
+  --api-key sk-xxx \
+  --model google/gemini-3.1-pro-preview \
+  --system-prompt agent/system_prompt.txt \
+  --work-dir ./workdir \
+  --resume
+```
+
+注意：`MODEL_ID` 中的 `/`（如 `google/gemini-3.1-pro-preview`）会被自动替换为 `-`，避免生成结果文件时创建意外的子目录。
 
 ### 环境变量配置
 
@@ -98,7 +140,7 @@ THINKING_MODE=kimi bash scripts/run_eval.sh
 | `API_URL` | 是 | — | LLM API 端点（OpenAI 兼容格式） |
 | `API_KEY` | 是 | — | LLM API 密钥 |
 | `MODEL_ID` | 是 | — | API 中的模型标识符 |
-| `THINKING_MODE` | 否 | `false` | 模型思考模式（`false`/`true`/`openai`/`kimi`） |
+| `THINKING_MODE` | 否 | `false` | 模型思考模式（`false`/`true`/`openai`/`kimi`/`gemini`） |
 | `API_INTERVAL_MS` | 否 | `0` | LLM API 调用最小间隔（毫秒），用于限速防止 429 |
 | `CPU_CORES` | 否 | `0-3` | 服务器进程绑定的 CPU 核心（taskset 格式，空字符串禁用） |
 | `MAX_TOOL_CALLS` | 否 | `50` | 最大工具调用次数，耗尽后自动结束评测 |
@@ -192,8 +234,11 @@ Agent 会自动：
 - 加载系统 Prompt
 - 与 LLM 进行 Tool Call 交互循环
 - 记录每次 tool call 的输入/输出/耗时
+- 每次 tool call 后自动保存会话上下文到 `session_context.json`（支持断点续跑）
 - 在 tool call 用尽（默认 50 次，可通过 `--max-tool-calls` 调整）或模型调用 `finish` 时结束
 - 保存评测日志到 `workdir/eval_log.json`
+
+如需从中断处恢复，添加 `--resume` 参数重新运行即可。
 
 ### 4. 手动运行 Benchmark
 

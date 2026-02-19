@@ -16,7 +16,7 @@
 #   API_URL         - LLM API 端点（必需）
 #   API_KEY         - LLM API 密钥（必需）
 #   MODEL_ID        - API 模型标识符（必需）
-#   THINKING_MODE   - 模型思考模式（默认: false，可选: true/openai/kimi）
+#   THINKING_MODE   - 模型思考模式（默认: false，可选: true/openai/kimi/gemini）
 #   API_INTERVAL_MS - LLM API 调用最小间隔毫秒数，用于限速（默认: 0，不限速）
 #   CPU_CORES       - 服务器绑定的 CPU 核心，taskset 格式（默认: 0-3，空字符串禁用）
 #   WORK_DIR        - 模型工作目录（默认: ./workdir，会被清空重建）
@@ -64,10 +64,17 @@ CPU_CORES="${CPU_CORES:-0-3}"
 MAX_TOOL_CALLS="${MAX_TOOL_CALLS:-50}"
 DEBUG="${DEBUG:-false}"
 
+# Sanitize MODEL_ID for use in file paths (replace / with -)
+MODEL_ID_SAFE="$(echo "${MODEL_ID}" | sed 's|/|-|g')"
+
+# Sanitize MODEL_NAME for use in file paths (replace / with -)
+MODEL_NAME_SAFE="$(echo "${MODEL_NAME}" | sed 's|/|-|g')"
+
 SYSTEM_PROMPT="${PROJECT_ROOT}/agent/system_prompt.txt"
 SKELETON_DIR="${PROJECT_ROOT}/skeleton"
 BENCHMARK_BIN="${PROJECT_ROOT}/benchmark/target/release/vector-db-benchmark"
 AGENT_BIN="${PROJECT_ROOT}/agent/target/release/vector-db-agent"
+RESUME_SESSION=false
 
 # ─── Helper functions ─────────────────────────────────────────────────────────
 log() {
@@ -163,6 +170,24 @@ step_build_binaries() {
 step_init_workdir() {
     log "Step 5: Initializing working directory..."
 
+    # If resuming (session_context.json exists and not completed), skip re-init
+    local ctx_file="${WORK_DIR}/session_context.json"
+    if [[ -f "${ctx_file}" ]]; then
+        # Check if session is already completed (tool_calls_used >= tool_calls_total)
+        local used total
+        used="$(python3 -c "import json; d=json.load(open('${ctx_file}')); print(d.get('tool_calls_used',0))" 2>/dev/null || echo 0)"
+        total="$(python3 -c "import json; d=json.load(open('${ctx_file}')); print(d.get('tool_calls_total',50))" 2>/dev/null || echo 50)"
+        if [[ "${used}" -lt "${total}" ]]; then
+            log "  Session context found (${used}/${total} tool calls). Skipping workdir re-init for resume."
+            RESUME_SESSION=true
+            return
+        else
+            log "  Session context found but already completed (${used}/${total}). Re-initializing."
+        fi
+    fi
+
+    RESUME_SESSION=false
+
     if [[ -d "${WORK_DIR}" ]]; then
         log "  Removing existing working directory: ${WORK_DIR}"
         rm -rf "${WORK_DIR}"
@@ -192,6 +217,12 @@ step_run_agent() {
         log "  Debug mode: ON"
     fi
 
+    local resume_flag=""
+    if [[ "${RESUME_SESSION:-false}" == "true" ]]; then
+        resume_flag="--resume"
+        log "  Resume mode: ON"
+    fi
+
     "${AGENT_BIN}" \
         --api-url "${API_URL}" \
         --api-key "${API_KEY}" \
@@ -205,6 +236,7 @@ step_run_agent() {
         --cpu-cores "${CPU_CORES}" \
         --max-tool-calls "${MAX_TOOL_CALLS}" \
         ${debug_flag} \
+        ${resume_flag} \
         || die "Agent framework exited with error"
 
     log "  Agent session complete."
@@ -224,7 +256,7 @@ step_collect_results() {
     # Copy eval log to results directory with model name
     local timestamp
     timestamp="$(date '+%Y%m%d_%H%M%S')"
-    local result_file="${RESULTS_DIR}/${MODEL_NAME}_${timestamp}.json"
+    local result_file="${RESULTS_DIR}/${MODEL_NAME_SAFE}_${timestamp}.json"
 
     # Build a combined result file with model metadata.
     # Uses best_benchmark (tracked across all runs) as primary source,
