@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "results/leaderboard.json"
+      - "leaderboard/**"
   workflow_dispatch:
 
 permissions:
@@ -22,13 +23,19 @@ jobs:
       - name: Install dependencies
         run: pip install matplotlib numpy Pillow
 
-      - name: Render chart
+      - name: Rebuild leaderboard.json
+        run: python3 scripts/rebuild_leaderboard.py --leaderboard-dir ./leaderboard --output ./results/leaderboard.json
+
+      - name: Render leaderboard.png
         run: python3 scripts/render_leaderboard.py
 
-      - name: Commit updated chart
+      - name: Render leaderboard_all.png
+        run: python3 scripts/render_leaderboard.py --all
+
+      - name: Commit updated leaderboard
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/images/leaderboard.png
+          git add results/leaderboard.json assets/images/leaderboard.png assets/images/leaderboard_all.png
           git diff --cached --quiet || git commit -m "chore: update leaderboard chart [skip ci]"
           git push
