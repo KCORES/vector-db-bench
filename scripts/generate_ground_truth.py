@@ -333,6 +333,27 @@ def _chunk_path(data_dir, chunk_id):
     return os.path.join(data_dir, f"ground_truth_chunk_{chunk_id}.json")
 
 
+def _is_valid_chunk(existing_chunk, q_start, q_end, top_k):
+    """Validate whether a previously saved chunk can be reused safely."""
+    expected_len = q_end - q_start
+    if not isinstance(existing_chunk, list) or len(existing_chunk) != expected_len:
+        return False
+
+    for offset, row in enumerate(existing_chunk):
+        if not isinstance(row, dict):
+            return False
+        expected_query_id = q_start + offset
+        if row.get("query_id") != expected_query_id:
+            return False
+        neighbors = row.get("neighbors")
+        if not isinstance(neighbors, list) or len(neighbors) != top_k:
+            return False
+        if not all(isinstance(n, int) for n in neighbors):
+            return False
+
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate ground truth via brute-force L2 nearest neighbor search."
@@ -429,6 +450,13 @@ def main():
     if use_numpy:
         del base_vectors, query_vectors
 
+    # Convert base data once for worker transport.
+    # Avoid repeating base_data.tolist() per chunk (huge memory overhead).
+    if use_numpy:
+        base_list = base_data.tolist()
+    else:
+        base_list = base_data
+
     os.makedirs(data_dir, exist_ok=True)
 
     # Build chunk task list, skipping already-completed chunks (resume support)
@@ -443,11 +471,11 @@ def main():
         all_chunk_paths.append(cp)
 
         if os.path.isfile(cp):
-            # Validate existing chunk has correct number of entries
+            # Validate existing chunk can be reused for current params.
             try:
                 with open(cp, "r", encoding="utf-8") as f:
                     existing = json.load(f)
-                if len(existing) == (q_end - q_start):
+                if _is_valid_chunk(existing, q_start, q_end, top_k):
                     skipped += 1
                     continue
             except (json.JSONDecodeError, OSError):
@@ -455,10 +483,8 @@ def main():
 
         if use_numpy:
             query_chunk = query_data[q_start:q_end].tolist()
-            base_list = base_data.tolist()
         else:
             query_chunk = query_data[q_start:q_end]
-            base_list = base_data
 
         pending_tasks.append(
             (base_list, query_chunk, top_k, chunk_id, q_start, cp, use_numpy)
