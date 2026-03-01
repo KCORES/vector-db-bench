@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use state::AgentState;
 use logger::AgentLogger;
+use state::AgentState;
 use tools::{dispatch_tool_call, get_tool_definitions, BenchmarkResult, ToolCall, ToolResult};
 
 /// Vector DB Agent - Tool Call Agent for LLM evaluation
@@ -157,7 +157,9 @@ struct ChatResponseMessage {
 const MAX_RETRIES: u32 = 5;
 
 /// Build extra body fields based on thinking mode setting.
-fn build_thinking_extra(thinking_mode: &str) -> std::collections::HashMap<String, serde_json::Value> {
+fn build_thinking_extra(
+    thinking_mode: &str,
+) -> std::collections::HashMap<String, serde_json::Value> {
     let mut extra = std::collections::HashMap::new();
     match thinking_mode {
         "true" | "openai" => {
@@ -275,7 +277,10 @@ async fn call_llm(
                 if attempt < MAX_RETRIES - 1 {
                     continue;
                 }
-                return Err(format!("LLM API request failed after {} retries: {}", MAX_RETRIES, e));
+                return Err(format!(
+                    "LLM API request failed after {} retries: {}",
+                    MAX_RETRIES, e
+                ));
             }
         }
     }
@@ -369,7 +374,10 @@ fn build_system_message(content: &str) -> ChatMessage {
 }
 
 /// Build an assistant message with tool calls (from LLM response).
-fn build_assistant_tool_calls_message(tool_calls: Vec<ToolCallMessage>, reasoning_content: Option<String>) -> ChatMessage {
+fn build_assistant_tool_calls_message(
+    tool_calls: Vec<ToolCallMessage>,
+    reasoning_content: Option<String>,
+) -> ChatMessage {
     ChatMessage {
         role: "assistant".to_string(),
         content: None,
@@ -380,7 +388,10 @@ fn build_assistant_tool_calls_message(tool_calls: Vec<ToolCallMessage>, reasonin
 }
 
 /// Build an assistant message with text content (no tool calls).
-fn build_assistant_content_message(content: &str, reasoning_content: Option<String>) -> ChatMessage {
+fn build_assistant_content_message(
+    content: &str,
+    reasoning_content: Option<String>,
+) -> ChatMessage {
     ChatMessage {
         role: "assistant".to_string(),
         content: Some(content.to_string()),
@@ -415,7 +426,10 @@ fn save_eval_log(work_dir: &Path, state: &AgentState) {
     });
 
     let log_path = work_dir.join("eval_log.json");
-    match std::fs::write(&log_path, serde_json::to_string_pretty(&log).unwrap_or_default()) {
+    match std::fs::write(
+        &log_path,
+        serde_json::to_string_pretty(&log).unwrap_or_default(),
+    ) {
         Ok(()) => eprintln!("[agent] Eval log saved to {}", log_path.display()),
         Err(e) => eprintln!("[agent] Failed to save eval log: {}", e),
     }
@@ -444,11 +458,7 @@ struct SessionContext {
 }
 
 /// Save session context to `<work_dir>/session_context.json`.
-fn save_session_context(
-    work_dir: &Path,
-    messages: &[ChatMessage],
-    state: &AgentState,
-) {
+fn save_session_context(work_dir: &Path, messages: &[ChatMessage], state: &AgentState) {
     let ctx = SessionContext {
         tool_calls_used: state.tool_calls_used,
         tool_calls_total: state.tool_calls_total,
@@ -488,6 +498,14 @@ fn load_session_context(work_dir: &Path) -> Option<SessionContext> {
             None
         }
     }
+}
+
+fn session_is_finished(ctx: &SessionContext) -> bool {
+    ctx.call_log
+        .last()
+        .and_then(|entry| entry.output.get("type"))
+        .and_then(|v| v.as_str())
+        == Some("Finish")
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -534,24 +552,22 @@ async fn main() {
 
     // Canonicalize all paths to absolute
     let data_dir = data_dir.canonicalize().unwrap_or_else(|e| {
-        eprintln!(
-            "[agent] ERROR: Cannot resolve data_dir: {}",
-            e
-        );
+        eprintln!("[agent] ERROR: Cannot resolve data_dir: {}", e);
         std::process::exit(1);
     });
     let benchmark_bin = benchmark_bin.canonicalize().unwrap_or_else(|e| {
-        eprintln!(
-            "[agent] ERROR: Cannot resolve benchmark_bin: {}",
-            e
-        );
+        eprintln!("[agent] ERROR: Cannot resolve benchmark_bin: {}", e);
         std::process::exit(1);
     });
 
     let bench_config = bench_tools::BenchConfig {
         benchmark_bin: benchmark_bin.clone(),
         data_dir: data_dir.clone(),
-        cpu_cores: if args.cpu_cores.is_empty() { None } else { Some(args.cpu_cores.clone()) },
+        cpu_cores: if args.cpu_cores.is_empty() {
+            None
+        } else {
+            Some(args.cpu_cores.clone())
+        },
     };
 
     // ── validate-perf mode: build, start server, run perf, report, exit ──
@@ -561,7 +577,11 @@ async fn main() {
 
         let result = bench_tools::run_profiling(&work_dir, &bench_config, Some(5)).await;
         match &result {
-            ToolResult::RunProfiling { flamegraph_svg_path, top_functions, total_samples } => {
+            ToolResult::RunProfiling {
+                flamegraph_svg_path,
+                top_functions,
+                total_samples,
+            } => {
                 eprintln!("[validate-perf] ✓ perf profiling succeeded!");
                 eprintln!("[validate-perf] Total samples: {}", total_samples);
                 if !top_functions.is_empty() {
@@ -633,24 +653,32 @@ async fn main() {
     // ── Resume from saved session context if requested ──
     let (mut messages, resumed) = if args.resume {
         match load_session_context(&work_dir) {
-            Some(ctx) if ctx.tool_calls_used < ctx.tool_calls_total => {
-                eprintln!(
-                    "[agent] Resuming session: {}/{} tool calls used",
-                    ctx.tool_calls_used, ctx.tool_calls_total
-                );
-                state.tool_calls_used = ctx.tool_calls_used;
-                state.tool_calls_total = ctx.tool_calls_total;
-                state.last_benchmark = ctx.last_benchmark;
-                state.best_benchmark = ctx.best_benchmark;
-                state.call_log = ctx.call_log;
-                (ctx.messages, true)
-            }
             Some(ctx) => {
-                eprintln!(
-                    "[agent] Session context found but already completed ({}/{} tool calls). Starting fresh.",
-                    ctx.tool_calls_used, ctx.tool_calls_total
-                );
-                (vec![], false)
+                let finished = session_is_finished(&ctx);
+                if ctx.tool_calls_used < ctx.tool_calls_total && !finished {
+                    eprintln!(
+                        "[agent] Resuming session: {}/{} tool calls used",
+                        ctx.tool_calls_used, ctx.tool_calls_total
+                    );
+                    state.tool_calls_used = ctx.tool_calls_used;
+                    state.tool_calls_total = ctx.tool_calls_total;
+                    state.last_benchmark = ctx.last_benchmark;
+                    state.best_benchmark = ctx.best_benchmark;
+                    state.call_log = ctx.call_log;
+                    (ctx.messages, true)
+                } else {
+                    if finished {
+                        eprintln!(
+                            "[agent] Session context found but already finished by finish() call. Starting fresh."
+                        );
+                    } else {
+                        eprintln!(
+                            "[agent] Session context found but already completed ({}/{} tool calls). Starting fresh.",
+                            ctx.tool_calls_used, ctx.tool_calls_total
+                        );
+                    }
+                    (vec![], false)
+                }
             }
             None => {
                 eprintln!("[agent] No session context found. Starting fresh.");
@@ -691,7 +719,8 @@ async fn main() {
             let finish_call = ToolCall::Finish {
                 summary: "Tool call limit reached - auto finish".to_string(),
             };
-            let result = dispatch_tool_call(&finish_call, &work_dir, &bench_config, &mut state).await;
+            let result =
+                dispatch_tool_call(&finish_call, &work_dir, &bench_config, &mut state).await;
             eprintln!("[agent] Final result: {:?}", result);
             logger.log_session_end(
                 state.tool_calls_used,
@@ -710,7 +739,10 @@ async fn main() {
             let elapsed = last.elapsed();
             if elapsed < api_interval {
                 let wait = api_interval - elapsed;
-                eprintln!("[agent] Rate limit: waiting {}ms before next API call", wait.as_millis());
+                eprintln!(
+                    "[agent] Rate limit: waiting {}ms before next API call",
+                    wait.as_millis()
+                );
                 tokio::time::sleep(wait).await;
             }
         }
@@ -752,19 +784,25 @@ async fn main() {
 
         // Process response
         // Merge reasoning fields: OpenAI/Kimi use "reasoning_content", Gemini uses "reasoning"
-        let reasoning_content = response_msg.reasoning_content.clone()
+        let reasoning_content = response_msg
+            .reasoning_content
+            .clone()
             .or_else(|| response_msg.reasoning.clone());
         if let Some(tool_calls) = response_msg.tool_calls {
             if tool_calls.is_empty() {
                 // No tool calls in response, treat as content-only
                 logger.log_llm_response(
-                    false, 0,
+                    false,
+                    0,
                     response_msg.content.as_deref(),
                     reasoning_content.as_deref(),
                     llm_duration_ms,
                 );
                 if let Some(content) = &response_msg.content {
-                    eprintln!("[agent] Assistant (no tools): {}", &content[..content.len().min(200)]);
+                    eprintln!(
+                        "[agent] Assistant (no tools): {}",
+                        &content[..content.len().min(200)]
+                    );
                     messages.push(build_assistant_content_message(content, reasoning_content));
                     save_session_context(&work_dir, &messages, &state);
                 } else {
@@ -790,7 +828,10 @@ async fn main() {
             );
 
             // Append assistant message with tool calls
-            messages.push(build_assistant_tool_calls_message(tool_calls.clone(), reasoning_content));
+            messages.push(build_assistant_tool_calls_message(
+                tool_calls.clone(),
+                reasoning_content,
+            ));
 
             for tc in &tool_calls {
                 let tool_name = &tc.function.name;
@@ -817,10 +858,12 @@ async fn main() {
                 let parsed = parse_tool_call(tool_name, tool_args);
                 let start = Instant::now();
 
-                let (result, call_for_log) = match parsed {
+                let (result, call_for_log, parsed_is_finish) = match parsed {
                     Ok(call) => {
-                        let result = dispatch_tool_call(&call, &work_dir, &bench_config, &mut state).await;
-                        (result, call)
+                        let parsed_is_finish = matches!(&call, ToolCall::Finish { .. });
+                        let result =
+                            dispatch_tool_call(&call, &work_dir, &bench_config, &mut state).await;
+                        (result, call, parsed_is_finish)
                     }
                     Err(e) => {
                         eprintln!("[agent] Parse error for tool '{}': {}", tool_name, e);
@@ -831,6 +874,7 @@ async fn main() {
                         (
                             result,
                             ToolCall::GetStatus, // placeholder for logging
+                            false,
                         )
                     }
                 };
@@ -863,7 +907,7 @@ async fn main() {
                 save_session_context(&work_dir, &messages, &state);
 
                 // Check if this was a finish call
-                if tool_name == "finish" {
+                if parsed_is_finish {
                     eprintln!("[agent] Finish tool called. Ending session.");
                     logger.log_session_end(
                         state.tool_calls_used,
@@ -885,7 +929,8 @@ async fn main() {
                         summary: "Tool call limit reached - auto finish".to_string(),
                     };
                     let finish_result =
-                        dispatch_tool_call(&finish_call, &work_dir, &bench_config, &mut state).await;
+                        dispatch_tool_call(&finish_call, &work_dir, &bench_config, &mut state)
+                            .await;
                     eprintln!("[agent] Final result: {:?}", finish_result);
                     logger.log_session_end(
                         state.tool_calls_used,
@@ -903,13 +948,25 @@ async fn main() {
             }
         } else if let Some(content) = response_msg.content {
             // Assistant responded with text only (no tool calls)
-            logger.log_llm_response(false, 0, Some(&content), reasoning_content.as_deref(), llm_duration_ms);
+            logger.log_llm_response(
+                false,
+                0,
+                Some(&content),
+                reasoning_content.as_deref(),
+                llm_duration_ms,
+            );
             eprintln!("[agent] Assistant: {}", &content[..content.len().min(200)]);
             messages.push(build_assistant_content_message(&content, reasoning_content));
             save_session_context(&work_dir, &messages, &state);
         } else {
             // Unexpected: no tool calls and no content
-            logger.log_llm_response(false, 0, None, reasoning_content.as_deref(), llm_duration_ms);
+            logger.log_llm_response(
+                false,
+                0,
+                None,
+                reasoning_content.as_deref(),
+                llm_duration_ms,
+            );
             eprintln!("[agent] Unexpected empty response from LLM. Ending session.");
             logger.log_session_end(
                 state.tool_calls_used,
@@ -944,7 +1001,10 @@ async fn main() {
             best.qps, best.recall, best.recall_passed
         );
     }
-    eprintln!("[agent] Real-time log saved to: {}", logger.path().display());
+    eprintln!(
+        "[agent] Real-time log saved to: {}",
+        logger.path().display()
+    );
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -988,7 +1048,8 @@ mod tests {
                 arguments: r#"{"path": "src/main.rs"}"#.to_string(),
             },
         }];
-        let msg = build_assistant_tool_calls_message(tool_calls.clone(), Some("reasoning".to_string()));
+        let msg =
+            build_assistant_tool_calls_message(tool_calls.clone(), Some("reasoning".to_string()));
         assert_eq!(msg.role, "assistant");
         assert!(msg.content.is_none());
         assert_eq!(msg.reasoning_content.as_deref(), Some("reasoning"));
@@ -1057,11 +1118,8 @@ mod tests {
 
     #[test]
     fn test_parse_run_benchmark_with_params() {
-        let call = parse_tool_call(
-            "run_benchmark",
-            r#"{"concurrency": 8, "warmup": 500}"#,
-        )
-        .unwrap();
+        let call =
+            parse_tool_call("run_benchmark", r#"{"concurrency": 8, "warmup": 500}"#).unwrap();
         match call {
             ToolCall::RunBenchmark {
                 concurrency,
@@ -1122,8 +1180,7 @@ mod tests {
 
     #[test]
     fn test_parse_finish() {
-        let call =
-            parse_tool_call("finish", r#"{"summary": "Optimized search"}"#).unwrap();
+        let call = parse_tool_call("finish", r#"{"summary": "Optimized search"}"#).unwrap();
         match call {
             ToolCall::Finish { summary } => assert_eq!(summary, "Optimized search"),
             _ => panic!("Expected Finish"),
@@ -1376,5 +1433,47 @@ mod tests {
         assert!(ctx.is_none());
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_session_is_finished_detects_finish_output() {
+        let ctx = SessionContext {
+            tool_calls_used: 3,
+            tool_calls_total: 50,
+            messages: vec![],
+            last_benchmark: None,
+            best_benchmark: None,
+            call_log: vec![state::ToolCallLog {
+                index: 3,
+                tool: "finish".to_string(),
+                input: serde_json::json!({"tool": "finish"}),
+                output: serde_json::json!({"type": "Finish", "status": "done"}),
+                duration_ms: 1,
+                timestamp: chrono::Utc::now(),
+            }],
+        };
+
+        assert!(session_is_finished(&ctx));
+    }
+
+    #[test]
+    fn test_session_is_finished_false_for_non_finish_output() {
+        let ctx = SessionContext {
+            tool_calls_used: 3,
+            tool_calls_total: 50,
+            messages: vec![],
+            last_benchmark: None,
+            best_benchmark: None,
+            call_log: vec![state::ToolCallLog {
+                index: 3,
+                tool: "finish".to_string(),
+                input: serde_json::json!({"tool": "finish"}),
+                output: serde_json::json!({"type": "Error", "message": "parse failed"}),
+                duration_ms: 1,
+                timestamp: chrono::Utc::now(),
+            }],
+        };
+
+        assert!(!session_is_finished(&ctx));
     }
 }

@@ -261,145 +261,150 @@ step_collect_results() {
     # Build a combined result file with model metadata.
     # Uses best_benchmark (tracked across all runs) as primary source,
     # falls back to last_benchmark, then scans benchmarks/*.json files.
-    python3 -c "
-import json, sys, os, glob
+    python3 - "${eval_log}" "${MODEL_NAME}" "${MODEL_ID}" "${WORK_DIR}" "${result_file}" <<'PY' || die "Failed to collect results"
+import glob
+import json
+import os
+import sys
 
-eval_log_path = '${eval_log}'
-model_name = '${MODEL_NAME}'
-model_id = '${MODEL_ID}'
-work_dir = '${WORK_DIR}'
+if len(sys.argv) != 6:
+    raise SystemExit("Expected arguments: eval_log model_name model_id work_dir result_file")
 
-with open(eval_log_path, 'r') as f:
+eval_log_path, model_name, model_id, work_dir, result_file = sys.argv[1:6]
+
+with open(eval_log_path, "r", encoding="utf-8") as f:
     eval_log = json.load(f)
 
 result = {
-    'model_name': model_name,
-    'model_id': model_id,
-    'eval_log': eval_log,
+    "model_name": model_name,
+    "model_id": model_id,
+    "eval_log": eval_log,
 }
 
-# Priority 1: best_benchmark from eval_log (tracked across all runs by agent)
-best_bench = eval_log.get('best_benchmark')
 
-# Priority 2: last_benchmark (from the final finish() call)
-last_bench = eval_log.get('last_benchmark')
-
-# Priority 3: scan all benchmarks/*.json for the highest QPS with passing recall
 def scan_benchmark_files():
-    bench_dir = os.path.join(work_dir, 'benchmarks')
+    bench_dir = os.path.join(work_dir, "benchmarks")
     if not os.path.isdir(bench_dir):
         return None
     best = None
-    for f in sorted(glob.glob(os.path.join(bench_dir, 'benchmark_*.json'))):
+    for path in sorted(glob.glob(os.path.join(bench_dir, "benchmark_*.json"))):
         try:
-            with open(f, 'r') as fh:
-                b = json.load(fh)
-            if b.get('recall_passed', False) and b.get('qps', 0) > 0:
-                if best is None or b['qps'] > best['qps']:
-                    best = b
+            with open(path, "r", encoding="utf-8") as f:
+                bench = json.load(f)
+            if bench.get("recall_passed", False) and bench.get("qps", 0) > 0:
+                if best is None or bench["qps"] > best["qps"]:
+                    best = bench
         except (json.JSONDecodeError, KeyError):
             continue
     return best
 
-# Pick the best available result
+
+best_bench = eval_log.get("best_benchmark")
+last_bench = eval_log.get("last_benchmark")
 chosen = None
-chosen_source = 'none'
+chosen_source = "none"
 
-if best_bench and best_bench.get('recall_passed', False) and best_bench.get('qps', 0) > 0:
+if best_bench and best_bench.get("recall_passed", False) and best_bench.get("qps", 0) > 0:
     chosen = best_bench
-    chosen_source = 'best_benchmark'
+    chosen_source = "best_benchmark"
 
-if last_bench and last_bench.get('recall_passed', False) and last_bench.get('qps', 0) > 0:
-    if chosen is None or last_bench['qps'] > chosen['qps']:
+if last_bench and last_bench.get("recall_passed", False) and last_bench.get("qps", 0) > 0:
+    if chosen is None or last_bench["qps"] > chosen["qps"]:
         chosen = last_bench
-        chosen_source = 'last_benchmark'
+        chosen_source = "last_benchmark"
 
 scanned = scan_benchmark_files()
-if scanned:
-    if chosen is None or scanned['qps'] > chosen['qps']:
-        chosen = scanned
-        chosen_source = 'benchmark_files_scan'
+if scanned and (chosen is None or scanned["qps"] > chosen["qps"]):
+    chosen = scanned
+    chosen_source = "benchmark_files_scan"
 
 if chosen:
-    result['final_benchmark'] = chosen
-    result['qps'] = chosen.get('qps', 0)
-    result['recall'] = chosen.get('recall', 0)
-    result['recall_passed'] = chosen.get('recall_passed', False)
-    result['result_source'] = chosen_source
-    print(f'[collect] Using {chosen_source}: QPS={chosen[\"qps\"]:.2f}, Recall={chosen[\"recall\"]:.4f}', file=sys.stderr)
+    result["final_benchmark"] = chosen
+    result["qps"] = chosen.get("qps", 0)
+    result["recall"] = chosen.get("recall", 0)
+    result["recall_passed"] = chosen.get("recall_passed", False)
+    result["result_source"] = chosen_source
+    print(
+        f"[collect] Using {chosen_source}: QPS={chosen['qps']:.2f}, Recall={chosen['recall']:.4f}",
+        file=sys.stderr,
+    )
 else:
-    result['qps'] = 0
-    result['recall'] = 0
-    result['recall_passed'] = False
-    result['result_source'] = 'none'
-    print('[collect] No valid benchmark result found', file=sys.stderr)
+    result["qps"] = 0
+    result["recall"] = 0
+    result["recall_passed"] = False
+    result["result_source"] = "none"
+    print("[collect] No valid benchmark result found", file=sys.stderr)
 
-with open('${result_file}', 'w') as f:
+with open(result_file, "w", encoding="utf-8") as f:
     json.dump(result, f, indent=2)
 
-print(json.dumps({
-    'model': model_name,
-    'qps': result['qps'],
-    'recall': result['recall'],
-    'recall_passed': result['recall_passed'],
-    'tool_calls_used': eval_log.get('tool_calls_used', 0),
-    'result_source': result.get('result_source', 'none'),
-}, indent=2))
-" || die "Failed to collect results"
+print(
+    json.dumps(
+        {
+            "model": model_name,
+            "qps": result["qps"],
+            "recall": result["recall"],
+            "recall_passed": result["recall_passed"],
+            "tool_calls_used": eval_log.get("tool_calls_used", 0),
+            "result_source": result.get("result_source", "none"),
+        },
+        indent=2,
+    )
+)
+PY
 
     log "  Results saved to ${result_file}"
 
     # Update leaderboard
     local leaderboard="${RESULTS_DIR}/leaderboard.json"
-    python3 -c "
-import json, sys
+    python3 - "${result_file}" "${leaderboard}" <<'PY' || die "Failed to update leaderboard"
+import json
+import sys
 from datetime import datetime, timezone
 
-result_path = '${result_file}'
-leaderboard_path = '${leaderboard}'
+if len(sys.argv) != 3:
+    raise SystemExit("Expected arguments: result_file leaderboard_path")
 
-with open(result_path, 'r') as f:
+result_path, leaderboard_path = sys.argv[1:3]
+
+with open(result_path, "r", encoding="utf-8") as f:
     result = json.load(f)
 
-# Load existing leaderboard or start fresh
 try:
-    with open(leaderboard_path, 'r') as f:
+    with open(leaderboard_path, "r", encoding="utf-8") as f:
         entries = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError):
     entries = []
 
-# Compute final score: QPS = 0 if recall < 0.95
-qps = result.get('qps', 0)
-recall = result.get('recall', 0)
+qps = result.get("qps", 0)
+recall = result.get("recall", 0)
 if recall < 0.95:
     qps = 0
 
 entry = {
-    'model_name': result['model_name'],
-    'qps': qps,
-    'recall': recall,
-    'recall_passed': result.get('recall_passed', False),
-    'tool_calls_used': result.get('eval_log', {}).get('tool_calls_used', 0),
-    'result_source': result.get('result_source', 'unknown'),
-    'timestamp': datetime.now(timezone.utc).isoformat(),
+    "model_name": result["model_name"],
+    "qps": qps,
+    "recall": recall,
+    "recall_passed": result.get("recall_passed", False),
+    "tool_calls_used": result.get("eval_log", {}).get("tool_calls_used", 0),
+    "result_source": result.get("result_source", "unknown"),
+    "timestamp": datetime.now(timezone.utc).isoformat(),
 }
 
 entries.append(entry)
+entries.sort(key=lambda item: (-item["qps"], -item["recall"]))
 
-# Sort: QPS descending, then recall descending for ties
-entries.sort(key=lambda e: (-e['qps'], -e['recall']))
-
-with open(leaderboard_path, 'w') as f:
+with open(leaderboard_path, "w", encoding="utf-8") as f:
     json.dump(entries, f, indent=2)
 
 print()
-print('=== Leaderboard ===')
-for i, e in enumerate(entries):
-    marker = ' <-- NEW' if e['model_name'] == result['model_name'] and e['timestamp'] == entry['timestamp'] else ''
-    src = f\" [{e.get('result_source', '?')}]\" if e.get('result_source') else ''
-    print(f\"  {i+1}. {e['model_name']:20s}  QPS: {e['qps']:>10.2f}  Recall: {e['recall']:.4f}{src}{marker}\")
+print("=== Leaderboard ===")
+for i, item in enumerate(entries):
+    marker = " <-- NEW" if item["model_name"] == result["model_name"] and item["timestamp"] == entry["timestamp"] else ""
+    src = f" [{item.get('result_source', '?')}]" if item.get("result_source") else ""
+    print(f"  {i+1}. {item['model_name']:20s}  QPS: {item['qps']:>10.2f}  Recall: {item['recall']:.4f}{src}{marker}")
 print()
-" || die "Failed to update leaderboard"
+PY
 
     log "  Leaderboard updated at ${leaderboard}"
 }
