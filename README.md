@@ -31,6 +31,8 @@ bash scripts/run_eval.sh
 
 详细使用说明见 [USAGE.md](USAGE.md)。
 
+如果显式设置了 `REASONING_EFFORT`，且当前 `THINKING_MODE` 支持 effort 风格推理参数，排行榜显示名、结果文件名以及重建 leaderboard 时读取到的模型名会自动追加后缀，例如 `gpt-5.4-pro(xhigh)`。
+
 ## 测试项标签
 
 本基准测试从以下维度考察大模型的编码能力和计算机科学知识：

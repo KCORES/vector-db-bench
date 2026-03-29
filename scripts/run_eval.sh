@@ -16,7 +16,8 @@
 #   API_URL         - LLM API 端点（必需）
 #   API_KEY         - LLM API 密钥（必需）
 #   MODEL_ID        - API 模型标识符（必需）
-#   THINKING_MODE   - 模型思考模式（默认: false，可选: true/openai/kimi/gemini）
+#   THINKING_MODE   - 模型思考/推理参数模式（默认: false，可选: true/openai/kimi/gemini/reasoning/doubao）
+#   REASONING_EFFORT- 推理强度，供支持 effort 风格参数的模型使用（默认: medium，如 low/medium/high/xhigh）
 #   API_INTERVAL_MS - LLM API 调用最小间隔毫秒数，用于限速（默认: 0，不限速）
 #   CPU_CORES       - 服务器绑定的 CPU 核心，taskset 格式（默认: 0-3，空字符串禁用）
 #   WORK_DIR        - 模型工作目录（默认: ./workdir，会被清空重建）
@@ -55,20 +56,47 @@ API_URL="${API_URL:?ERROR: API_URL environment variable is required}"
 API_KEY="${API_KEY:?ERROR: API_KEY environment variable is required}"
 MODEL_ID="${MODEL_ID:?ERROR: MODEL_ID environment variable is required}"
 
+WORK_DIR_WAS_SET=false
+if [[ -n "${WORK_DIR+x}" ]]; then
+    WORK_DIR_WAS_SET=true
+fi
+
+REASONING_EFFORT_WAS_SET=false
+if [[ -n "${REASONING_EFFORT+x}" ]]; then
+    REASONING_EFFORT_WAS_SET=true
+fi
+
 DATA_DIR="${DATA_DIR:-${PROJECT_ROOT}/data}"
 WORK_DIR="${WORK_DIR:-${PROJECT_ROOT}/workdir}"
 RESULTS_DIR="${RESULTS_DIR:-${PROJECT_ROOT}/results}"
 THINKING_MODE="${THINKING_MODE:-false}"
+REASONING_EFFORT="${REASONING_EFFORT:-medium}"
 API_INTERVAL_MS="${API_INTERVAL_MS:-0}"
 CPU_CORES="${CPU_CORES:-0-3}"
 MAX_TOOL_CALLS="${MAX_TOOL_CALLS:-50}"
 DEBUG="${DEBUG:-false}"
 
+THINKING_MODE_NORMALIZED="$(echo "${THINKING_MODE}" | tr '[:upper:]' '[:lower:]' | tr '_' '-')"
+MODEL_DISPLAY_NAME="${MODEL_NAME}"
+case "${THINKING_MODE_NORMALIZED}" in
+    reasoning|openai-reasoning|reasoning-effort|openrouter-openai|doubao)
+        if [[ "${REASONING_EFFORT_WAS_SET}" == "true" && -n "${REASONING_EFFORT}" ]]; then
+            MODEL_DISPLAY_NAME="${MODEL_NAME}(${REASONING_EFFORT})"
+        fi
+        ;;
+esac
+
+if [[ "${WORK_DIR_WAS_SET}" == "true" && "${MODEL_DISPLAY_NAME}" != "${MODEL_NAME}" ]]; then
+    if [[ "${WORK_DIR}" == *"${MODEL_NAME}"* && "${WORK_DIR}" != *"${MODEL_DISPLAY_NAME}"* ]]; then
+        WORK_DIR="${WORK_DIR/${MODEL_NAME}/${MODEL_DISPLAY_NAME}}"
+    fi
+fi
+
 # Sanitize MODEL_ID for use in file paths (replace / with -)
 MODEL_ID_SAFE="$(echo "${MODEL_ID}" | sed 's|/|-|g')"
 
-# Sanitize MODEL_NAME for use in file paths (replace / with -)
-MODEL_NAME_SAFE="$(echo "${MODEL_NAME}" | sed 's|/|-|g')"
+# Sanitize MODEL_DISPLAY_NAME for use in file paths (replace / with -)
+MODEL_NAME_SAFE="$(echo "${MODEL_DISPLAY_NAME}" | sed 's|/|-|g')"
 
 SYSTEM_PROMPT="${PROJECT_ROOT}/agent/system_prompt.txt"
 SKELETON_DIR="${PROJECT_ROOT}/skeleton"
@@ -203,7 +231,7 @@ step_init_workdir() {
 # ─── Step 6: Run the Agent ───────────────────────────────────────────────────
 step_run_agent() {
     log "Step 6: Starting Agent framework..."
-    log "  Model: ${MODEL_NAME} (${MODEL_ID})"
+    log "  Model: ${MODEL_DISPLAY_NAME} (${MODEL_ID})"
     log "  API URL: ${API_URL}"
     log "  Work dir: ${WORK_DIR}"
 
@@ -227,9 +255,11 @@ step_run_agent() {
         --api-url "${API_URL}" \
         --api-key "${API_KEY}" \
         --model "${MODEL_ID}" \
+        --model-name "${MODEL_DISPLAY_NAME}" \
         --system-prompt "${SYSTEM_PROMPT}" \
         --work-dir "${WORK_DIR}" \
         --thinking-mode "${THINKING_MODE}" \
+        --reasoning-effort "${REASONING_EFFORT}" \
         --api-interval-ms "${API_INTERVAL_MS}" \
         --data-dir "${DATA_DIR}" \
         --benchmark-bin "${BENCHMARK_BIN}" \
@@ -265,7 +295,7 @@ step_collect_results() {
 import json, sys, os, glob
 
 eval_log_path = '${eval_log}'
-model_name = '${MODEL_NAME}'
+model_name = '${MODEL_DISPLAY_NAME}'
 model_id = '${MODEL_ID}'
 work_dir = '${WORK_DIR}'
 
@@ -409,10 +439,15 @@ main() {
     log "=========================================="
     log "Vector DB Bench - Evaluation Pipeline"
     log "=========================================="
-    log "Model:       ${MODEL_NAME}"
+    log "Model:       ${MODEL_DISPLAY_NAME}"
     log "API URL:     ${API_URL}"
     log "Model ID:    ${MODEL_ID}"
     log "Thinking:    ${THINKING_MODE}"
+    if [[ "${REASONING_EFFORT_WAS_SET}" == "true" ]]; then
+        log "Reasoning:   ${REASONING_EFFORT} (explicit)"
+    else
+        log "Reasoning:   ${REASONING_EFFORT} (default)"
+    fi
     log "API interval:${API_INTERVAL_MS}ms"
     log "CPU cores:   ${CPU_CORES}"
     log "Max tools:   ${MAX_TOOL_CALLS}"
@@ -430,7 +465,7 @@ main() {
     step_collect_results
 
     log "=========================================="
-    log "Evaluation complete for ${MODEL_NAME}!"
+    log "Evaluation complete for ${MODEL_DISPLAY_NAME}!"
     log "=========================================="
 }
 

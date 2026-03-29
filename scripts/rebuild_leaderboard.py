@@ -112,15 +112,45 @@ def extract_best_result(entry_dir: str) -> tuple[dict | None, str]:
     return chosen, source
 
 
+def count_tool_calls_from_agent_log(entry_dir: str) -> int:
+    """Count tool_call events from agent_log.jsonl as a fallback."""
+    log_path = os.path.join(entry_dir, "agent_log.jsonl")
+    if not os.path.isfile(log_path):
+        return 0
+    count = 0
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                    if event.get("event") == "tool_call":
+                        count += 1
+                except json.JSONDecodeError:
+                    continue
+    except IOError:
+        pass
+    return count
+
+
 def get_tool_calls_used(entry_dir: str) -> int:
-    """Read tool_calls_used from eval_log.json."""
+    """Read tool_calls_used from eval_log.json, fallback to agent_log.jsonl."""
     eval_log_path = os.path.join(entry_dir, "eval_log.json")
     if os.path.isfile(eval_log_path):
         try:
             with open(eval_log_path, "r", encoding="utf-8") as f:
-                return json.load(f).get("tool_calls_used", 0)
+                val = json.load(f).get("tool_calls_used", 0)
+                if val > 0:
+                    return val
         except (json.JSONDecodeError, IOError):
             pass
+
+    fallback = count_tool_calls_from_agent_log(entry_dir)
+    if fallback > 0:
+        return fallback
+
     return 0
 
 

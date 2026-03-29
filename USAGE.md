@@ -78,7 +78,7 @@ bash scripts/run_eval.sh
 如需启用模型思考模式（thinking/reasoning）：
 
 ```bash
-# OpenAI 系列（如 o1、o3）— 发送 {"thinking": {"type": "enabled"}}
+# OpenAI 兼容 thinking 模式 — 发送 {"thinking": {"type": "enabled"}}
 THINKING_MODE=openai bash scripts/run_eval.sh
 
 # Kimi 系列 — 发送 {"enable_thinking": true}
@@ -86,6 +86,13 @@ THINKING_MODE=kimi bash scripts/run_eval.sh
 
 # Gemini 系列（如 gemini-3.1-pro-preview）— 发送 {"reasoning": {"enabled": true}}
 THINKING_MODE=gemini bash scripts/run_eval.sh
+
+# OpenAI GPT-5 / OpenRouter GPT-5.4-Pro 等 effort 风格推理模型
+# 发送 {"reasoning": {"effort": "xhigh"}}
+MODEL_NAME=gpt-5.4-pro WORK_DIR=./leaderboard/gpt-5.4-pro-turn-1 THINKING_MODE=reasoning REASONING_EFFORT=xhigh bash scripts/run_eval.sh
+
+# Doubao 系列 — 发送 {"reasoning_effort": "high"}
+THINKING_MODE=doubao REASONING_EFFORT=high bash scripts/run_eval.sh
 ```
 
 脚本会依次执行：
@@ -125,28 +132,45 @@ MODEL_NAME=gemini WORK_DIR=./leaderboard/gemini-turn-1 \
   --api-url https://openrouter.ai/api/v1 \
   --api-key sk-xxx \
   --model google/gemini-3.1-pro-preview \
+  --model-name gemini-3.1-pro-preview \
   --system-prompt agent/system_prompt.txt \
   --work-dir ./workdir \
   --resume
 ```
 
 注意：`MODEL_ID` 中的 `/`（如 `google/gemini-3.1-pro-preview`）会被自动替换为 `-`，避免生成结果文件时创建意外的子目录。
+如果你是手动直接调用 `vector-db-agent`，并且希望重建 leaderboard 时显示带推理强度后缀的名称，可以显式传入 `--model-name "gpt-5.4-pro(xhigh)"` 这类展示名。
 
 ### 环境变量配置
 
 | 变量 | 必需 | 默认值 | 说明 |
 |------|------|--------|------|
-| `MODEL_NAME` | 是 | — | 被测模型名称（用于排行榜显示） |
+| `MODEL_NAME` | 是 | — | 被测模型名称（用于排行榜显示；若显式设置了 `REASONING_EFFORT` 且当前模式支持 effort 参数，会自动显示为 `MODEL_NAME(effort)`） |
 | `API_URL` | 是 | — | LLM API 端点（OpenAI 兼容格式） |
 | `API_KEY` | 是 | — | LLM API 密钥 |
 | `MODEL_ID` | 是 | — | API 中的模型标识符 |
-| `THINKING_MODE` | 否 | `false` | 模型思考模式（`false`/`true`/`openai`/`kimi`/`gemini`） |
+| `THINKING_MODE` | 否 | `false` | 模型思考/推理参数模式（`false`/`true`/`openai`/`kimi`/`gemini`/`reasoning`/`openai-reasoning`/`doubao`） |
+| `REASONING_EFFORT` | 否 | `medium` | 推理强度，供支持 effort 风格参数的模型使用，如 `minimal`/`low`/`medium`/`high`/`xhigh` |
 | `API_INTERVAL_MS` | 否 | `0` | LLM API 调用最小间隔（毫秒），用于限速防止 429 |
 | `CPU_CORES` | 否 | `0-3` | 服务器进程绑定的 CPU 核心（taskset 格式，空字符串禁用） |
 | `MAX_TOOL_CALLS` | 否 | `50` | 最大工具调用次数，耗尽后自动结束评测 |
 | `WORK_DIR` | 否 | `./workdir` | 模型工作目录（会被清空重建） |
 | `DATA_DIR` | 否 | `./data` | 数据集存放目录 |
 | `RESULTS_DIR` | 否 | `./results` | 结果输出目录 |
+
+`THINKING_MODE` / `REASONING_EFFORT` 的常见组合：
+
+- `THINKING_MODE=openai` 或 `true`：发送 `{"thinking":{"type":"enabled"}}`
+- `THINKING_MODE=kimi`：发送 `{"enable_thinking":true}`
+- `THINKING_MODE=gemini`：发送 `{"reasoning":{"enabled":true}}`
+- `THINKING_MODE=reasoning` 或 `openai-reasoning`：发送 `{"reasoning":{"effort":"<REASONING_EFFORT>"}}`
+- `THINKING_MODE=doubao`：发送 `{"reasoning_effort":"<REASONING_EFFORT>"}`
+
+显示名规则：
+
+- 只有当 `REASONING_EFFORT` 被显式设置，且 `THINKING_MODE` 会把 effort 参数发送给上游模型时，排行榜显示名、结果文件名、重建 leaderboard 时读取到的模型名才会自动追加后缀，例如 `gpt-5.4-pro(xhigh)`。
+- 如果没有显式设置 `REASONING_EFFORT`，即使内部默认值是 `medium`，也不会在名称后追加 `(medium)`。
+- 如果 `WORK_DIR` 中包含原始 `MODEL_NAME`，`run_eval.sh` 会自动把其中第一次出现的模型名替换为带后缀的显示名，便于生成形如 `leaderboard/gpt-5.4-pro(xhigh)-turn-1` 的目录。
 
 ### 支持的 LLM API
 
@@ -155,6 +179,9 @@ Agent 框架使用 OpenAI 兼容的 Chat Completions API（支持 function calli
 ```bash
 # OpenAI
 API_URL=https://api.openai.com/v1 MODEL_ID=gpt-4o
+
+# OpenRouter + GPT-5.4-Pro（最高推理强度）
+API_URL=https://openrouter.ai/api/v1 MODEL_ID=openai/gpt-5.4-pro THINKING_MODE=reasoning REASONING_EFFORT=xhigh
 
 # Anthropic (通过兼容层)
 API_URL=https://your-proxy/v1 MODEL_ID=claude-sonnet-4-20250514
@@ -225,6 +252,7 @@ cp -r skeleton/ workdir/
   --system-prompt agent/system_prompt.txt \
   --work-dir ./workdir \
   --thinking-mode false \
+  --reasoning-effort medium \
   --api-interval-ms 0 \
   --cpu-cores 0-3 \
   --max-tool-calls 50

@@ -30,6 +30,11 @@ struct Args {
     #[arg(long, required_unless_present = "validate_perf")]
     model: Option<String>,
 
+    /// Human-readable model name used in logs/leaderboard rebuilds.
+    /// Falls back to --model when not provided.
+    #[arg(long)]
+    model_name: Option<String>,
+
     /// Path to system prompt file
     #[arg(long, required_unless_present = "validate_perf")]
     system_prompt: Option<String>,
@@ -39,9 +44,16 @@ struct Args {
     work_dir: String,
 
     /// Enable model thinking/reasoning mode.
-    /// Values: "false" (default), "true"/"openai", "kimi", "gemini"
+    /// Values: "false" (default), "true"/"openai", "kimi", "gemini",
+    /// "reasoning"/"openai-reasoning", "doubao"
     #[arg(long, default_value = "false")]
     thinking_mode: String,
+
+    /// Reasoning effort level for models that support configurable reasoning depth.
+    /// Common values include: "minimal", "low", "medium", "high", "xhigh".
+    /// Only used by thinking modes that send an effort-style reasoning field.
+    #[arg(long, default_value = "medium")]
+    reasoning_effort: String,
 
     /// Minimum interval (milliseconds) between LLM API calls to avoid rate limiting.
     /// 0 means no delay (default: 0).
@@ -156,11 +168,26 @@ struct ChatResponseMessage {
 /// Maximum number of retries for LLM API calls.
 const MAX_RETRIES: u32 = 5;
 
+/// Normalize thinking mode aliases into a stable matching key.
+fn normalize_thinking_mode(thinking_mode: &str) -> String {
+    thinking_mode.trim().to_ascii_lowercase().replace('_', "-")
+}
+
 /// Build extra body fields based on thinking mode setting.
-fn build_thinking_extra(thinking_mode: &str) -> std::collections::HashMap<String, serde_json::Value> {
+fn build_thinking_extra(
+    thinking_mode: &str,
+    reasoning_effort: &str,
+) -> std::collections::HashMap<String, serde_json::Value> {
     let mut extra = std::collections::HashMap::new();
-    match thinking_mode {
+    match normalize_thinking_mode(thinking_mode).as_str() {
+        "false" | "off" | "none" => {}
         "true" | "openai" => {
+            extra.insert(
+                "thinking".to_string(),
+                serde_json::json!({"type": "enabled"}),
+            );
+        }
+        "thinking" | "openai-thinking" => {
             extra.insert(
                 "thinking".to_string(),
                 serde_json::json!({"type": "enabled"}),
@@ -174,6 +201,15 @@ fn build_thinking_extra(thinking_mode: &str) -> std::collections::HashMap<String
                 "reasoning".to_string(),
                 serde_json::json!({"enabled": true}),
             );
+        }
+        "reasoning" | "openai-reasoning" | "reasoning-effort" | "openrouter-openai" => {
+            extra.insert(
+                "reasoning".to_string(),
+                serde_json::json!({"effort": reasoning_effort}),
+            );
+        }
+        "doubao" => {
+            extra.insert("reasoning_effort".to_string(), serde_json::json!(reasoning_effort));
         }
         _ => {} // "false" or anything else — no extra fields
     }
@@ -190,6 +226,7 @@ async fn call_llm(
     messages: &[ChatMessage],
     tools: &[serde_json::Value],
     thinking_mode: &str,
+    reasoning_effort: &str,
     api_interval_ms: u64,
     debug: bool,
 ) -> Result<ChatResponseMessage, String> {
@@ -199,7 +236,7 @@ async fn call_llm(
         messages: messages.to_vec(),
         tools: tools.to_vec(),
         tool_choice: "auto".to_string(),
-        extra_body: build_thinking_extra(thinking_mode),
+        extra_body: build_thinking_extra(thinking_mode, reasoning_effort),
     };
 
     if debug {
@@ -596,6 +633,7 @@ async fn main() {
     let api_url = args.api_url.unwrap();
     let api_key = args.api_key.unwrap();
     let model = args.model.unwrap();
+    let display_model_name = args.model_name.clone().unwrap_or_else(|| model.clone());
     let system_prompt_path = args.system_prompt.unwrap();
 
     // Load system prompt
@@ -611,9 +649,11 @@ async fn main() {
     };
 
     eprintln!("[agent] Starting agent loop");
-    eprintln!("[agent] Model: {}", model);
+    eprintln!("[agent] Model ID: {}", model);
+    eprintln!("[agent] Display model name: {}", display_model_name);
     eprintln!("[agent] Work dir: {}", work_dir.display());
     eprintln!("[agent] Thinking mode: {}", args.thinking_mode);
+    eprintln!("[agent] Reasoning effort: {}", args.reasoning_effort);
 
     // Initialize real-time logger
     let mut logger = match AgentLogger::new(&work_dir) {
@@ -624,7 +664,7 @@ async fn main() {
         }
     };
     eprintln!("[agent] Real-time log: {}", logger.path().display());
-    logger.log_session_start(&model, &args.work_dir, &args.thinking_mode);
+    logger.log_session_start(&display_model_name, &args.work_dir, &args.thinking_mode);
 
     let client = reqwest::Client::new();
     let tool_defs = get_tool_definitions();
@@ -725,6 +765,7 @@ async fn main() {
             &messages,
             &tool_defs,
             &args.thinking_mode,
+            &args.reasoning_effort,
             args.api_interval_ms,
             args.debug,
         )
@@ -1229,32 +1270,62 @@ mod tests {
 
     #[test]
     fn test_thinking_mode_false() {
-        let extra = build_thinking_extra("false");
+        let extra = build_thinking_extra("false", "medium");
+        assert!(extra.is_empty());
+    }
+
+    #[test]
+    fn test_thinking_mode_off_alias() {
+        let extra = build_thinking_extra("off", "medium");
         assert!(extra.is_empty());
     }
 
     #[test]
     fn test_thinking_mode_true() {
-        let extra = build_thinking_extra("true");
+        let extra = build_thinking_extra("true", "medium");
         assert_eq!(extra["thinking"], serde_json::json!({"type": "enabled"}));
     }
 
     #[test]
     fn test_thinking_mode_openai() {
-        let extra = build_thinking_extra("openai");
+        let extra = build_thinking_extra("openai", "medium");
+        assert_eq!(extra["thinking"], serde_json::json!({"type": "enabled"}));
+    }
+
+    #[test]
+    fn test_thinking_mode_openai_thinking_alias() {
+        let extra = build_thinking_extra("openai-thinking", "medium");
         assert_eq!(extra["thinking"], serde_json::json!({"type": "enabled"}));
     }
 
     #[test]
     fn test_thinking_mode_kimi() {
-        let extra = build_thinking_extra("kimi");
+        let extra = build_thinking_extra("kimi", "medium");
         assert_eq!(extra["enable_thinking"], serde_json::json!(true));
     }
 
     #[test]
     fn test_thinking_mode_gemini() {
-        let extra = build_thinking_extra("gemini");
+        let extra = build_thinking_extra("gemini", "medium");
         assert_eq!(extra["reasoning"], serde_json::json!({"enabled": true}));
+    }
+
+    #[test]
+    fn test_thinking_mode_doubao() {
+        let extra = build_thinking_extra("doubao", "high");
+        assert_eq!(extra["reasoning_effort"], serde_json::json!("high"));
+    }
+
+    #[test]
+    fn test_thinking_mode_reasoning_effort() {
+        let extra = build_thinking_extra("reasoning", "xhigh");
+        assert_eq!(extra["reasoning"], serde_json::json!({"effort": "xhigh"}));
+    }
+
+    #[test]
+    fn test_thinking_mode_openai_reasoning_alias() {
+        let extra = build_thinking_extra("openai-reasoning", "high");
+        assert_eq!(extra["reasoning"], serde_json::json!({"effort": "high"}));
     }
 
     #[test]
@@ -1264,7 +1335,7 @@ mod tests {
             messages: vec![],
             tools: vec![],
             tool_choice: "auto".to_string(),
-            extra_body: build_thinking_extra("gemini"),
+            extra_body: build_thinking_extra("gemini", "medium"),
         };
         let json = serde_json::to_value(&req).unwrap();
         assert_eq!(json["reasoning"]["enabled"], true);
@@ -1278,7 +1349,7 @@ mod tests {
             messages: vec![],
             tools: vec![],
             tool_choice: "auto".to_string(),
-            extra_body: build_thinking_extra("openai"),
+            extra_body: build_thinking_extra("openai", "medium"),
         };
         let json = serde_json::to_value(&req).unwrap();
         // "thinking" should be at the top level, not nested under "extra_body"
@@ -1293,10 +1364,24 @@ mod tests {
             messages: vec![],
             tools: vec![],
             tool_choice: "auto".to_string(),
-            extra_body: build_thinking_extra("kimi"),
+            extra_body: build_thinking_extra("kimi", "medium"),
         };
         let json = serde_json::to_value(&req).unwrap();
         assert_eq!(json["enable_thinking"], true);
+        assert!(json.get("extra_body").is_none());
+    }
+
+    #[test]
+    fn test_thinking_mode_reasoning_flattened_in_request() {
+        let req = ChatRequest {
+            model: "test".to_string(),
+            messages: vec![],
+            tools: vec![],
+            tool_choice: "auto".to_string(),
+            extra_body: build_thinking_extra("reasoning", "xhigh"),
+        };
+        let json = serde_json::to_value(&req).unwrap();
+        assert_eq!(json["reasoning"]["effort"], "xhigh");
         assert!(json.get("extra_body").is_none());
     }
 
